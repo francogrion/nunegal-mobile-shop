@@ -42,7 +42,8 @@ La aplicación queda disponible en <http://localhost:5173>.
 
 - **[React 19](https://react.dev/)** con **[Vite](https://vite.dev/)** como bundler y servidor de desarrollo.
 - **[React Router 8](https://reactrouter.com/)** en modo declarativo para el enrutado en cliente.
-- **CSS Modules** para los estilos de cada componente, sobre unas variables de diseño globales (colores, espaciados).
+- **CSS Modules** para los estilos de cada componente, sobre unas variables de diseño globales (colores, tipografías, espaciados).
+- Tipografías **Inter**, **Space Grotesk** y **JetBrains Mono** servidas desde el propio proyecto con [Fontsource](https://fontsource.org/), e iconos de [Tabler](https://tabler.io/icons) como componentes de React.
 - **[Vitest](https://vitest.dev/)** + **[Testing Library](https://testing-library.com/)** (sobre jsdom) para los tests, y **[MSW](https://mswjs.io/)** para simular la API a nivel de red.
 - **[Playwright](https://playwright.dev/)** + **[axe](https://github.com/dequelabs/axe-core-npm)** para los tests end-to-end y la auditoría automática de accesibilidad.
 - **[ESLint](https://eslint.org/)** (reglas recomendadas, reglas de hooks de React y de Fast Refresh) y **[Prettier](https://prettier.io/)** para la calidad y el formato del código.
@@ -99,21 +100,32 @@ src/
 │   ├── httpClient.js   Cliente HTTP (fetch + errores tipados ApiError)
 │   ├── normalizers.js  Adaptadores de la respuesta de la API al modelo de la app
 │   └── products.js     Servicio de productos y cesta (con caché)
-├── components/       Componentes reutilizables (Header, Breadcrumbs, Layout, ProductCard,
-│                     SearchBar, ProductSpecs, ProductActions, OptionSelector)
+├── components/       Componentes reutilizables (Header, Breadcrumbs, Layout, CircuitBackground,
+│                     ProductCard, SearchBar, ProductHighlights, ProductSpecs,
+│                     ProductActions, OptionSelector, ProductImage…)
 ├── hooks/            Hooks (useResource y sus envoltorios useProducts / useProduct,
 │                     useCartCount, useAddToCart)
 ├── pages/            Una carpeta por ruta (ProductListPage, ProductDetailPage, NotFoundPage)
 ├── store/            Estado global de la cesta (cartStore)
 ├── styles/           Estilos globales y variables de diseño
 ├── test/             Configuración de tests, helpers, servidor MSW y fixtures
-├── utils/            Funciones puras (precio, filtrado, acceso seguro a localStorage)
+├── utils/            Funciones puras (precio, filtrado, cifras del catálogo, especificaciones
+│                     destacadas, colores de muestra, acceso seguro a localStorage)
 ├── App.jsx           Definición de rutas
 ├── main.jsx          Punto de entrada (monta el router)
 └── routes.js         Rutas compartidas (patrón y generador de la URL de detalle)
 ```
 
 Los tests conviven junto al código que prueban (`*.test.js` / `*.test.jsx`).
+
+## Diseño
+
+La interfaz sigue la estructura de las capturas del enunciado con una estética de tienda tecnológica (paleta _Niebla · cobalto_):
+
+- **Fondo claro con acento cobalto** y un degradado cobalto → cian en los elementos de marca. Todos los textos cumplen el contraste WCAG AA, verificado por la auditoría de axe de los tests end-to-end.
+- **Tipografía monoespaciada** (JetBrains Mono) para los datos: precios, capacidades, especificaciones y migas de pan, con cifras alineadas como en una ficha técnica. Space Grotesk para los titulares e Inter para el texto.
+- **Fondo de circuito impreso** tras la cabecera, con pulsos de luz que recorren las pistas. Es decorativo (oculto a los lectores de pantalla), solo anima el trazo de un SVG y se detiene si el sistema pide movimiento reducido.
+- Cabecera flotante tipo cristal que se mantiene visible al desplazarse, tarjetas con la foto fundida sobre una bandeja iluminada y un visor con esquinas de cámara en el detalle.
 
 ## Funcionalidades
 
@@ -125,14 +137,18 @@ Los tests conviven junto al código que prueban (`*.test.js` / `*.test.jsx`).
 - La búsqueda se guarda en la URL (`/?search=jade`), de forma que se puede compartir y se conserva al volver atrás desde un producto.
 - Una región de estado accesible anuncia la carga y el número de resultados, y hay un mensaje específico cuando ninguna coincide.
 - Si la API falla, se muestra un aviso con un botón para reintentar.
+- Un **resumen del catálogo** muestra el número de modelos y de marcas y el precio mínimo, calculados a partir de los datos de la API.
+- Mientras se cargan los productos se muestran tarjetas de esqueleto.
+- Atajo de teclado: pulsar `/` en cualquier punto lleva al buscador (anunciado con `aria-keyshortcuts`).
 
 Los precios se muestran en euros con formato español (`170 €`); la API no indica la moneda, así que se asume euro.
 
 ### Detalle de producto (`/product/:id`)
 
 - Vista en **dos columnas**: la imagen a la izquierda y los detalles y acciones a la derecha (en móvil se apilan).
+- **Especificaciones destacadas** (pantalla, batería, cámara y RAM) extraídas del texto libre de la API. Si un dato no se puede leer con fiabilidad, no se muestra; la tabla completa siempre conserva el texto original.
 - Tabla de **especificaciones** con marca, modelo, precio, CPU, RAM, sistema operativo, resolución y tamaño de pantalla, batería, cámaras principal y frontal, dimensiones y peso. Los datos que la API no proporciona se muestran como _No disponible_.
-- **Selectores de almacenamiento y color** como grupos de botones de opción accesibles. Si solo hay una opción, se muestra igualmente y viene seleccionada; si hay varias, ninguna se preselecciona para que el usuario elija de forma explícita.
+- **Selectores de almacenamiento y color** como grupos de botones de opción accesibles. Si solo hay una opción, se muestra igualmente y viene seleccionada; si hay varias, ninguna se preselecciona para que el usuario elija de forma explícita. Los colores muestran una muestra cuando el nombre corresponde a un color CSS válido (lo valida el propio navegador).
 - El enlace **Volver al listado** regresa al listado del que venía el usuario, conservando su búsqueda; si se abrió el detalle directamente, lleva al listado completo.
 - Botón **Añadir a la cesta**, activo cuando hay almacenamiento y color seleccionados. Envía a la API el identificador del producto y los códigos de color y almacenamiento, se desactiva mientras la petición está en curso (evitando envíos dobles) y confirma el resultado o muestra un error.
 - Estados de carga y de error con opción de reintento.
@@ -140,7 +156,7 @@ Los precios se muestran en euros con formato español (`170 €`); la API no ind
 ### Cabecera y cesta
 
 - El nombre de la aplicación enlaza con el listado.
-- **Migas de pan** con la página actual (`Catálogo`, `Catálogo › Acer Iconia Talk S` o `Catálogo › Página no encontrada`). El nombre del producto reutiliza la petición de la página de detalle, sin llamadas extra a la API.
+- **Migas de pan** con la página actual (`Catálogo`, `Catálogo / Acer Iconia Talk S` o `Catálogo / Página no encontrada`). El nombre del producto reutiliza la petición de la página de detalle, sin llamadas extra a la API.
 - **Contador de la cesta** en la parte derecha, visible en todas las vistas. Se guarda en `localStorage`, por lo que se mantiene al recargar, y se sincroniza entre pestañas abiertas; si el navegador bloquea el almacenamiento, sigue funcionando en memoria durante la sesión.
 
 ### Detalles transversales
@@ -196,5 +212,4 @@ El desarrollo se organiza en hitos incrementales, cada uno reflejado en el histo
 ## Posibles mejoras
 
 - **Página de cesta**: la API solo expone el número de productos, pero la aplicación podría guardar también qué variantes se han añadido.
-- **Muestras de color** en el selector cuando el nombre del color lo permita.
 - **Modo oscuro** a partir de las variables de diseño ya definidas.
