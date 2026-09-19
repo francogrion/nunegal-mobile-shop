@@ -124,6 +124,21 @@ describe('ProductListPage', () => {
     expect(await findProductList()).toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
+
+  it('summarizes the catalog: models, brands and lowest price', async () => {
+    mockProductListEndpoint()
+    renderApp()
+
+    const summary = await screen.findByRole('list', {
+      name: 'Resumen del catálogo',
+    })
+    const [models, brands, lowestPrice] =
+      within(summary).getAllByRole('listitem')
+
+    expect(models).toHaveTextContent('4 modelos')
+    expect(brands).toHaveTextContent('2 marcas')
+    expect(lowestPrice).toHaveTextContent('170 € precio mínimo')
+  })
 })
 
 describe('ProductListPage search', () => {
@@ -202,5 +217,27 @@ describe('ProductListPage search', () => {
 
     expect(getVisibleModels()).toHaveLength(rawProductList.length)
     expect(getLocation().search).toBe('')
+  })
+
+  it('focuses the search box when the user presses "/"', async () => {
+    mockProductListEndpoint()
+    const { user } = renderApp()
+    await findProductList()
+
+    await user.keyboard('/')
+
+    expect(getSearchBox()).toHaveFocus()
+    expect(getSearchBox()).toHaveValue('')
+    expect(getSearchBox()).toHaveAttribute('aria-keyshortcuts', '/')
+  })
+
+  it('lets the user type "/" inside the search box', async () => {
+    mockProductListEndpoint()
+    const { user } = renderApp()
+    await findProductList()
+
+    await user.type(getSearchBox(), 'a/b')
+
+    expect(getSearchBox()).toHaveValue('a/b')
   })
 })

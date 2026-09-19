@@ -1,3 +1,4 @@
+import { IconArrowUpRight } from '@tabler/icons-react'
 import { Link, useLocation } from 'react-router'
 import { productPath } from '../../routes.js'
 import { formatPrice } from '../../utils/formatPrice.js'
@@ -16,12 +17,19 @@ function ProductCard({ product }) {
       to={productPath(id)}
       state={{ from: location }}
     >
-      {/* Decorative: brand and model are already announced as text */}
-      <ProductImage className={styles.image} src={imageUrl} alt="" />
+      <div className={styles.media}>
+        {/* Decorative: brand and model are already announced as text */}
+        <ProductImage className={styles.image} src={imageUrl} alt="" />
+      </div>
       <div className={styles.info}>
         <p className={styles.brand}>{brand}</p>
         <h2 className={styles.model}>{model}</h2>
-        <p className={styles.price}>{formatPrice(price)}</p>
+        <div className={styles.footer}>
+          <p className={styles.price}>{formatPrice(price)}</p>
+          <span className={styles.go} aria-hidden="true">
+            <IconArrowUpRight size={16} stroke={2} />
+          </span>
+        </div>
       </div>
     </Link>
   )
