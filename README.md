@@ -102,15 +102,16 @@ src/
 │   └── products.js     Servicio de productos y cesta (con caché)
 ├── components/       Componentes reutilizables (Header, Breadcrumbs, Layout, CircuitBackground,
 │                     ProductCard, SearchBar, ProductHighlights, ProductSpecs,
-│                     ProductActions, OptionSelector, ProductImage…)
+│                     ProductActions, OptionSelector, ProductImage, CartMenu…)
 ├── hooks/            Hooks (useResource y sus envoltorios useProducts / useProduct,
-│                     useCartCount, useAddToCart)
+│                     useCartItems, useAddToCart)
 ├── pages/            Una carpeta por ruta (ProductListPage, ProductDetailPage, NotFoundPage)
-├── store/            Estado global de la cesta (cartStore)
+├── store/            Estado global de la cesta: líneas de producto (cartStore)
 ├── styles/           Estilos globales y variables de diseño
 ├── test/             Configuración de tests, helpers, servidor MSW y fixtures
 ├── utils/            Funciones puras (precio, filtrado, cifras del catálogo, especificaciones
-│                     destacadas, colores de muestra, acceso seguro a localStorage)
+│                     destacadas, colores de muestra, resumen de la cesta, acceso seguro a
+│                     localStorage)
 ├── App.jsx           Definición de rutas
 ├── main.jsx          Punto de entrada (monta el router)
 └── routes.js         Rutas compartidas (patrón y generador de la URL de detalle)
@@ -157,7 +158,14 @@ Los precios se muestran en euros con formato español (`170 €`); la API no ind
 
 - El nombre de la aplicación enlaza con el listado.
 - **Migas de pan** con la página actual (`Inicio`, `Inicio / Acer Iconia Talk S` o `Inicio / Página no encontrada`). El nombre del producto reutiliza la petición de la página de detalle, sin llamadas extra a la API.
-- **Contador de la cesta** en la parte derecha, visible en todas las vistas. Se guarda en `localStorage`, por lo que se mantiene al recargar, y se sincroniza entre pestañas abiertas; si el navegador bloquea el almacenamiento, sigue funcionando en memoria durante la sesión.
+- **Cesta** en la parte derecha, con el número de productos visible en todas las vistas. Al pulsarla se despliega un panel con:
+  - cada producto con su foto, variante (almacenamiento y color), cantidad y precio; las repeticiones de la misma variante se agrupan en una línea;
+  - el **total** (los productos sin precio no suman y se indica cuántos quedan fuera);
+  - botones para **eliminar** un producto o **vaciar la cesta**, anunciados a los lectores de pantalla.
+
+  El panel sigue el patrón de divulgación accesible (botón con `aria-expanded`), se cierra con Escape (devolviendo el foco al botón), al hacer clic fuera o al abrir un producto desde él, y en móvil ocupa el ancho de la cabecera.
+
+- El contenido de la cesta se guarda en `localStorage`, por lo que se mantiene al recargar, y se sincroniza entre pestañas abiertas; si el navegador bloquea el almacenamiento, sigue funcionando en memoria durante la sesión.
 
 ### Detalles transversales
 
@@ -191,7 +199,8 @@ Las respuestas de `GET /api/product` y `GET /api/product/:id` se guardan en `loc
 
 Antes de empezar a desarrollar se analizaron las respuestas reales de la API. Estas son las particularidades encontradas y cómo se tratan en la aplicación:
 
-- **`POST /api/cart` siempre devuelve `{ "count": 1 }`**: el servicio no guarda estado entre peticiones, así que usar el valor tal cual dejaría la cesta siempre en 1. Por eso el contador de la cabecera acumula en cliente el `count` de cada respuesta y lo persiste en `localStorage`. Si la API pasara a devolver el total real de la cesta, bastaría con cambiar la suma por una asignación en [`useAddToCart.js`](src/hooks/useAddToCart.js).
+- **`POST /api/cart` siempre devuelve `{ "count": 1 }`**: el servicio no guarda estado entre peticiones, así que usar el valor tal cual dejaría la cesta siempre en 1. Por eso la cesta se gestiona en cliente: cada respuesta suma su `count` a la cantidad de la línea correspondiente y el contenido se persiste en `localStorage`.
+- **Sin consulta ni borrado de la cesta**: la API solo permite añadir productos, así que la lista de la cesta, el total y las acciones de eliminar y vaciar se resuelven en el navegador, sin llamadas a la API.
 - **Arranque en frío**: la API está alojada en Render y, tras un tiempo sin uso, la primera petición puede tardar en torno a un minuto. La caché en cliente evita repetir peticiones y comparte las simultáneas; la interfaz muestra estados de carga y de error con opción de reintento.
 - **Precios vacíos**: el precio llega como texto y algunos productos lo tienen vacío (`""`). Se convierte a número, o a `null` cuando no hay precio, y estos productos se muestran como _Precio no disponible_.
 - **Nombres de campo con erratas** (`dimentions`, `secondaryCmera`) y **campos intercambiados** (`displayResolution` contiene el tamaño en pulgadas y `displaySize` la resolución en píxeles). La respuesta se normaliza en la capa de API ([`normalizers.js`](src/api/normalizers.js)), de forma que los componentes trabajan con un modelo limpio.
@@ -212,5 +221,5 @@ El desarrollo se organiza en hitos incrementales, cada uno reflejado en el histo
 
 ## Posibles mejoras
 
-- **Página de cesta**: la API solo expone el número de productos, pero la aplicación podría guardar también qué variantes se han añadido.
+- **Cantidades editables** en la cesta (sumar o restar unidades de una línea) y una página de cesta completa con el proceso de compra.
 - **Modo oscuro** a partir de las variables de diseño ya definidas.
