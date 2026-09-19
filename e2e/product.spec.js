@@ -29,6 +29,23 @@ test.describe('Detalle de producto', () => {
     ).toHaveAttribute('aria-current', 'page')
   })
 
+  test('opens the details at the top even from a product far down the list', async ({
+    page,
+  }) => {
+    await page.goto('/')
+    const product = page
+      .getByRole('list', { name: 'Productos' })
+      .getByRole('listitem')
+      .nth(11)
+    await product.scrollIntoViewIfNeeded()
+    expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0)
+
+    await product.getByRole('link').click()
+
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    expect(await page.evaluate(() => window.scrollY)).toBe(0)
+  })
+
   test('shows every attribute required for the product description', async ({
     page,
   }) => {

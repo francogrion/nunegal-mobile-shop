@@ -1,5 +1,5 @@
 import { screen, waitFor, within } from '@testing-library/react'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CART_STORAGE_KEY } from './store/cartStore.js'
 import {
   mockProductDetailEndpoint,
@@ -132,5 +132,36 @@ describe('App document title', () => {
     await waitFor(() =>
       expect(document.title).toBe('Página no encontrada · Mobile Shop'),
     )
+  })
+})
+
+describe('App scroll position', () => {
+  // jsdom does not implement scrolling, so the call itself is observed
+  const spyOnScroll = () =>
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+
+  it('starts every newly opened page at the top', async () => {
+    mockProductListEndpoint()
+    mockProductDetailEndpoint()
+    const scrollTo = spyOnScroll()
+    const { user } = renderApp()
+
+    await user.click(await screen.findByRole('link', { name: /Iconia Talk S/ }))
+
+    expect(scrollTo).toHaveBeenCalledWith(0, 0)
+  })
+
+  it('keeps the scroll position while the search changes the URL', async () => {
+    mockProductListEndpoint()
+    const scrollTo = spyOnScroll()
+    const { user } = renderApp()
+    await screen.findByRole('list', { name: 'Productos' })
+
+    await user.type(
+      screen.getByRole('searchbox', { name: 'Buscar por marca o modelo' }),
+      'liquid',
+    )
+
+    expect(scrollTo).not.toHaveBeenCalled()
   })
 })

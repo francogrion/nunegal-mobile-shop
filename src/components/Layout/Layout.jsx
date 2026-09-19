@@ -1,11 +1,13 @@
 import { Outlet } from 'react-router'
 import CircuitBackground from '../CircuitBackground/CircuitBackground.jsx'
 import Header from '../Header/Header.jsx'
+import ScrollToTop from '../ScrollToTop/ScrollToTop.jsx'
 import styles from './Layout.module.css'
 
 function Layout() {
   return (
     <div className={styles.layout}>
+      <ScrollToTop />
       <CircuitBackground />
       <Header />
       <main className={styles.main}>
