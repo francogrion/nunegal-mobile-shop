@@ -1,19 +1,46 @@
+import { useSearchParams } from 'react-router'
 import ProductCard from '../../components/ProductCard/ProductCard.jsx'
+import SearchBar from '../../components/SearchBar/SearchBar.jsx'
 import { useProducts } from '../../hooks/useProducts.js'
+import { filterProducts } from '../../utils/filterProducts.js'
 import styles from './ProductListPage.module.css'
+
+const describeResults = (count, search) => {
+  if (count === 0) {
+    return `No hay productos que coincidan con «${search.trim()}».`
+  }
+  return count === 1 ? '1 producto' : `${count} productos`
+}
 
 function ProductListPage() {
   const { status, products, retry } = useProducts()
+  // The search lives in the URL so it can be shared and survives navigating
+  // to a product and back.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const search = searchParams.get('search') ?? ''
+  const visibleProducts = filterProducts(products, search)
+
+  const handleSearchChange = (value) => {
+    setSearchParams(value ? { search: value } : {}, { replace: true })
+  }
 
   return (
     <section>
-      <h1>Catálogo de móviles</h1>
+      <div className={styles.toolbar}>
+        <h1 className={styles.title}>Catálogo de móviles</h1>
+        <SearchBar value={search} onChange={handleSearchChange} />
+      </div>
 
-      {status === 'loading' && (
-        <p role="status" className={styles.message}>
-          Cargando productos…
-        </p>
-      )}
+      {/* A single live region whose text changes, so screen readers announce
+          both the loading state and the number of results. */}
+      <p
+        role="status"
+        className={status === 'loading' ? styles.message : styles.summary}
+      >
+        {status === 'loading' && 'Cargando productos…'}
+        {status === 'success' &&
+          describeResults(visibleProducts.length, search)}
+      </p>
 
       {status === 'error' && (
         <div role="alert" className={styles.message}>
@@ -24,9 +51,9 @@ function ProductListPage() {
         </div>
       )}
 
-      {status === 'success' && (
+      {status === 'success' && visibleProducts.length > 0 && (
         <ul aria-label="Productos" className={styles.grid}>
-          {products.map((product) => (
+          {visibleProducts.map((product) => (
             <li key={product.id}>
               <ProductCard product={product} />
             </li>

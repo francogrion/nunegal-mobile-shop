@@ -9,6 +9,14 @@ import { server } from '../../test/server.js'
 
 const findProductList = () => screen.findByRole('list', { name: 'Productos' })
 
+const getSearchBox = () =>
+  screen.getByRole('searchbox', { name: 'Buscar por marca o modelo' })
+
+const getVisibleModels = () =>
+  within(screen.getByRole('list', { name: 'Productos' }))
+    .getAllByRole('heading', { level: 2 })
+    .map((heading) => heading.textContent)
+
 describe('ProductListPage', () => {
   it('shows a loading message while the products are being fetched', async () => {
     mockProductListEndpoint()
@@ -89,5 +97,73 @@ describe('ProductListPage', () => {
 
     expect(await findProductList()).toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+})
+
+describe('ProductListPage search', () => {
+  it('filters the products by model as the user types', async () => {
+    mockProductListEndpoint()
+    const { user } = renderApp()
+    await findProductList()
+
+    await user.type(getSearchBox(), 'liquid')
+
+    expect(getVisibleModels()).toEqual(['Liquid Z6 Plus', 'Liquid Jade 2'])
+  })
+
+  it('filters the products by brand', async () => {
+    mockProductListEndpoint()
+    const { user } = renderApp()
+    await findProductList()
+
+    await user.type(getSearchBox(), 'alcatel')
+
+    expect(getVisibleModels()).toEqual(['Flash (2017)'])
+  })
+
+  it('announces how many products match the search', async () => {
+    mockProductListEndpoint()
+    const { user } = renderApp()
+    await findProductList()
+
+    expect(screen.getByRole('status')).toHaveTextContent('4 productos')
+
+    await user.type(getSearchBox(), 'jade')
+
+    expect(screen.getByRole('status')).toHaveTextContent('1 producto')
+  })
+
+  it('tells the user when no product matches the search', async () => {
+    mockProductListEndpoint()
+    const { user } = renderApp()
+    await findProductList()
+
+    await user.type(getSearchBox(), 'nokia')
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'No hay productos que coincidan con «nokia»',
+    )
+    expect(
+      screen.queryByRole('list', { name: 'Productos' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('keeps the search in the URL so it can be shared or restored', async () => {
+    mockProductListEndpoint()
+    const { user, getLocation } = renderApp()
+    await findProductList()
+
+    await user.type(getSearchBox(), 'jade')
+
+    expect(getLocation().search).toBe('?search=jade')
+  })
+
+  it('applies the search found in the URL', async () => {
+    mockProductListEndpoint()
+    renderApp({ route: '/?search=jade' })
+    await findProductList()
+
+    expect(getSearchBox()).toHaveValue('jade')
+    expect(getVisibleModels()).toEqual(['Liquid Jade 2'])
   })
 })

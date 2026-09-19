@@ -1,3 +1,23 @@
+/* Title on the left and search on the right, stacked on narrow screens */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.title {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.summary {
+  margin: var(--space-4) 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
 .message {
   padding: var(--space-8) 0;
   text-align: center;
