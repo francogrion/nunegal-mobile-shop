@@ -86,6 +86,28 @@ describe('createCartStore', () => {
     expect(store.getCount()).toBe(1)
   })
 
+  it('subtracts one unit from a line', () => {
+    const store = createCartStore({ key: KEY })
+    store.add(iconia32Black, 3)
+
+    store.decrease('ZmGrkLRPXOTpxsU4jjAcv:2001:1000')
+
+    expect(store.getItems()[0].quantity).toBe(2)
+    expect(store.getCount()).toBe(2)
+  })
+
+  it('removes a line when subtracting its last unit', () => {
+    const store = createCartStore({ key: KEY })
+    store.add(iconia32Black, 1)
+    store.add(iconia16Black, 1)
+
+    store.decrease('ZmGrkLRPXOTpxsU4jjAcv:2001:1000')
+
+    expect(store.getItems().map(({ storageName }) => storageName)).toEqual([
+      '16 GB',
+    ])
+  })
+
   it('empties the cart', () => {
     const store = createCartStore({ key: KEY })
     store.add(iconia32Black, 2)

@@ -103,6 +103,18 @@ export function createCartStore({
     write(getItems().filter((line) => line.lineId !== lineId))
   }
 
+  // Subtracting the last unit removes the line
+  const decrease = (lineId) => {
+    write(
+      getItems().flatMap((line) => {
+        if (line.lineId !== lineId) return [line]
+        return line.quantity > 1
+          ? [{ ...line, quantity: line.quantity - 1 }]
+          : []
+      }),
+    )
+  }
+
   const clear = () => write(EMPTY_CART)
 
   const subscribe = (listener) => {
@@ -118,7 +130,7 @@ export function createCartStore({
     }
   }
 
-  return { getItems, getCount, add, remove, clear, subscribe }
+  return { getItems, getCount, add, decrease, remove, clear, subscribe }
 }
 
 export const cartStore = createCartStore()

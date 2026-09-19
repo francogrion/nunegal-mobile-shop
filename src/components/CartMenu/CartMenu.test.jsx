@@ -1,8 +1,14 @@
-import { screen, within } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
-import { mockProductDetailEndpoint } from '../../test/apiMocks.js'
+import { screen, waitFor, within } from '@testing-library/react'
+import { http, HttpResponse } from 'msw'
+import { describe, expect, it, vi } from 'vitest'
+import { API_BASE_URL } from '../../api/config.js'
+import {
+  mockCartEndpoint,
+  mockProductDetailEndpoint,
+} from '../../test/apiMocks.js'
 import { cartLines, seedCart } from '../../test/cart.js'
 import { renderApp } from '../../test/renderApp.jsx'
+import { server } from '../../test/server.js'
 
 // A page that makes no API requests, so tests focus on the header cart
 const QUIET_ROUTE = '/does-not-exist'
@@ -149,5 +155,113 @@ describe('Cart menu', () => {
     expect(
       screen.queryByRole('region', { name: 'Cesta' }),
     ).not.toBeInTheDocument()
+  })
+})
+
+describe('Cart menu quantities', () => {
+  const ICONIA = 'Acer Iconia Talk S, 32 GB, Black'
+
+  const getAddButton = (panel) =>
+    within(panel).getByRole('button', { name: `Sumar una unidad de ${ICONIA}` })
+
+  const getSubtractButton = (panel) =>
+    within(panel).getByRole('button', {
+      name: `Restar una unidad de ${ICONIA}`,
+    })
+
+  it('adds one more unit of a product through the API', async () => {
+    const cart = mockCartEndpoint()
+    seedCart([iconiaTalkS])
+    const { user } = renderApp({ route: QUIET_ROUTE })
+    const panel = await openCart(user)
+
+    await user.click(getAddButton(panel))
+
+    await waitFor(() =>
+      expect(getCartButton()).toHaveAccessibleName('3 productos en la cesta'),
+    )
+    const [line] = within(panel).getAllByRole('listitem')
+    expect(line).toHaveTextContent('3 × 170 €')
+    expect(line).toHaveTextContent('510 €')
+    expect(within(panel).getByRole('status')).toHaveTextContent(
+      '3 unidades de Acer Iconia Talk S en la cesta',
+    )
+    const [{ request }] = cart.mock.calls[0]
+    await expect(request.json()).resolves.toEqual({
+      id: 'ZmGrkLRPXOTpxsU4jjAcv',
+      colorCode: 1000,
+      storageCode: 2001,
+    })
+  })
+
+  it('subtracts one unit of a product without calling the API', async () => {
+    seedCart([iconiaTalkS])
+    const { user } = renderApp({ route: QUIET_ROUTE })
+    const panel = await openCart(user)
+
+    await user.click(getSubtractButton(panel))
+
+    const [line] = within(panel).getAllByRole('listitem')
+    expect(line).toHaveTextContent('1 × 170 €')
+    expect(getCartButton()).toHaveAccessibleName('1 producto en la cesta')
+    expect(within(panel).getByRole('status')).toHaveTextContent(
+      '1 unidad de Acer Iconia Talk S en la cesta',
+    )
+  })
+
+  it('removes the product when subtracting its last unit', async () => {
+    seedCart([{ ...iconiaTalkS, quantity: 1 }])
+    const { user } = renderApp({ route: QUIET_ROUTE })
+    const panel = await openCart(user)
+
+    await user.click(getSubtractButton(panel))
+
+    expect(panel).toHaveTextContent('Tu cesta está vacía')
+    expect(within(panel).getByRole('status')).toHaveTextContent(
+      'Producto eliminado de la cesta',
+    )
+  })
+
+  it('ignores further clicks on "+" while a unit is being added', async () => {
+    const response = Promise.withResolvers()
+    const endpoint = vi.fn(async () => {
+      await response.promise
+      return HttpResponse.json({ count: 1 })
+    })
+    server.use(http.post(`${API_BASE_URL}/api/cart`, endpoint))
+    seedCart([iconiaTalkS])
+    const { user } = renderApp({ route: QUIET_ROUTE })
+    const panel = await openCart(user)
+
+    await user.click(getAddButton(panel))
+    await user.click(getAddButton(panel))
+
+    expect(getAddButton(panel)).toHaveAttribute('aria-disabled', 'true')
+    response.resolve()
+    await waitFor(() =>
+      expect(getCartButton()).toHaveAccessibleName('3 productos en la cesta'),
+    )
+    expect(endpoint).toHaveBeenCalledTimes(1)
+  })
+
+  it('tells when a unit could not be added and keeps the quantity', async () => {
+    server.use(
+      http.post(
+        `${API_BASE_URL}/api/cart`,
+        () => new HttpResponse(null, { status: 500 }),
+      ),
+    )
+    seedCart([iconiaTalkS])
+    const { user } = renderApp({ route: QUIET_ROUTE })
+    const panel = await openCart(user)
+
+    await user.click(getAddButton(panel))
+
+    expect(await within(panel).findByRole('alert')).toHaveTextContent(
+      'No se ha podido añadir otra unidad',
+    )
+    expect(within(panel).getAllByRole('listitem')[0]).toHaveTextContent(
+      '2 × 170 €',
+    )
   })
 })

@@ -134,16 +134,72 @@
 }
 
 .variant,
-.quantity,
 .lineTotal {
   margin: 0;
   font-family: var(--font-mono);
   font-size: 0.75rem;
 }
 
-.variant,
-.quantity {
+.variant {
   color: var(--color-text-muted);
+}
+
+/* Quantity stepper followed by the unit price: "− 2 + × 170 €" */
+.quantity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+}
+
+.step {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.step:hover {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.step[aria-disabled='true'] {
+  opacity: 0.4;
+  cursor: progress;
+}
+
+.stepValue {
+  min-width: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.unitPrice {
+  color: var(--color-text-muted);
+}
+
+.error {
+  margin: var(--space-1) 0 0;
+  font-size: 0.75rem;
+  color: var(--color-danger);
 }
 
 .lineTotal {

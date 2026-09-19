@@ -4,9 +4,9 @@ import { cartStore } from '../store/cartStore.js'
 
 /**
  * Adds a product with the chosen storage and color ({ code, name }) to the
- * cart through the API and stores the line in the client cart. `status` is
- * 'idle', 'adding', 'added' or 'error'; `reset` goes back to 'idle' (e.g.
- * when the selection changes).
+ * cart through the API and stores the line in the client cart. `add` resolves
+ * with whether it succeeded. `status` is 'idle', 'adding', 'added' or
+ * 'error'; `reset` goes back to 'idle' (e.g. when the selection changes).
  */
 export function useAddToCart() {
   const [status, setStatus] = useState('idle')
@@ -36,8 +36,10 @@ export function useAddToCart() {
         count,
       )
       setStatus('added')
+      return true
     } catch {
       setStatus('error')
+      return false
     }
   }, [])
 

@@ -100,7 +100,7 @@ test.describe('Detalle de producto', () => {
     await expect(cartSummary(page, '1 producto en la cesta')).toBeAttached()
   })
 
-  test('lists the added product in the cart, where it can be removed', async ({
+  test('manages the added product from the cart: quantities and removal', async ({
     page,
   }) => {
     await page.goto(PRODUCT_PATH)
@@ -112,15 +112,28 @@ test.describe('Detalle de producto', () => {
 
     await page.getByRole('button', { name: '1 producto en la cesta' }).click()
     const cart = page.getByRole('region', { name: 'Cesta' })
-    await expect(cart.getByRole('listitem')).toHaveCount(1)
-    await expect(cart.getByRole('listitem')).toContainText('32 GB · Black')
+    const line = cart.getByRole('listitem')
+    await expect(line).toHaveCount(1)
+    await expect(line).toContainText('32 GB · Black')
     await expect(cart.getByText(/^Total/)).toContainText('170')
 
+    const variant = 'Acer Iconia Talk S, 32 GB, Black'
     await cart
-      .getByRole('button', {
-        name: 'Eliminar Acer Iconia Talk S, 32 GB, Black',
-      })
+      .getByRole('button', { name: `Sumar una unidad de ${variant}` })
       .click()
+    await expect(
+      page.getByRole('button', { name: '2 productos en la cesta' }),
+    ).toBeVisible()
+    await expect(cart.getByText(/^Total/)).toContainText('340')
+
+    await cart
+      .getByRole('button', { name: `Restar una unidad de ${variant}` })
+      .click()
+    await expect(
+      page.getByRole('button', { name: '1 producto en la cesta' }),
+    ).toBeVisible()
+
+    await cart.getByRole('button', { name: `Eliminar ${variant}` }).click()
 
     await expect(cart).toContainText('Tu cesta está vacía')
     await expect(

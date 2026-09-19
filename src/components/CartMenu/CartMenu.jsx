@@ -1,6 +1,12 @@
-import { IconShoppingBag, IconTrash } from '@tabler/icons-react'
+import {
+  IconMinus,
+  IconPlus,
+  IconShoppingBag,
+  IconTrash,
+} from '@tabler/icons-react'
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { Link } from 'react-router'
+import { useAddToCart } from '../../hooks/useAddToCart.js'
 import { useCartItems } from '../../hooks/useCartItems.js'
 import { productPath } from '../../routes.js'
 import { cartStore } from '../../store/cartStore.js'
@@ -15,10 +21,27 @@ const describeCart = (count) =>
 const describeUnpriced = (count) =>
   `No incluye ${count} ${count === 1 ? 'producto' : 'productos'} sin precio.`
 
-function CartLine({ line, onRemove, onOpen }) {
+const describeUnits = (quantity, name) =>
+  `${quantity} ${quantity === 1 ? 'unidad' : 'unidades'} de ${name} en la cesta.`
+
+function CartLine({ line, onIncreased, onDecrease, onRemove, onOpen }) {
   const { productId, brand, model, imageUrl, price, quantity } = line
-  const { storageName, colorName } = line
+  const { storageCode, storageName, colorCode, colorName } = line
   const name = `${brand} ${model}`
+  const label = `${name}, ${storageName}, ${colorName}`
+  // Adding a unit goes through the API like any other addition to the cart
+  const { status, add } = useAddToCart()
+  const isAdding = status === 'adding'
+
+  const increase = async () => {
+    if (isAdding) return
+    const added = await add({
+      product: { id: productId, brand, model, imageUrl, price },
+      storage: { code: storageCode, name: storageName },
+      color: { code: colorCode, name: colorName },
+    })
+    if (added) onIncreased(line)
+  }
 
   return (
     <li className={styles.line}>
@@ -36,11 +59,42 @@ function CartLine({ line, onRemove, onOpen }) {
         <p className={styles.variant}>
           {storageName} · {colorName}
         </p>
-        <p className={styles.quantity}>
-          {price === null
-            ? `${quantity} × Precio no disponible`
-            : `${quantity} × ${formatPrice(price)}`}
-        </p>
+        <div className={styles.quantity}>
+          <div
+            className={styles.stepper}
+            role="group"
+            aria-label={`Cantidad de ${label}`}
+          >
+            <button
+              type="button"
+              className={styles.step}
+              aria-label={`Restar una unidad de ${label}`}
+              onClick={() => onDecrease(line)}
+            >
+              <IconMinus size={14} stroke={2} aria-hidden="true" />
+            </button>
+            <span className={styles.stepValue}>{quantity}</span>
+            {/* aria-disabled instead of disabled keeps the focus on the
+                button while the request is in progress */}
+            <button
+              type="button"
+              className={styles.step}
+              aria-label={`Sumar una unidad de ${label}`}
+              aria-disabled={isAdding}
+              onClick={increase}
+            >
+              <IconPlus size={14} stroke={2} aria-hidden="true" />
+            </button>
+          </div>{' '}
+          <span className={styles.unitPrice}>
+            × {price === null ? 'Precio no disponible' : formatPrice(price)}
+          </span>
+        </div>
+        {status === 'error' && (
+          <p role="alert" className={styles.error}>
+            No se ha podido añadir otra unidad. Inténtalo de nuevo.
+          </p>
+        )}
       </div>
       {price !== null && (
         <p className={styles.lineTotal}>{formatPrice(price * quantity)}</p>
@@ -48,7 +102,7 @@ function CartLine({ line, onRemove, onOpen }) {
       <button
         type="button"
         className={styles.remove}
-        aria-label={`Eliminar ${name}, ${storageName}, ${colorName}`}
+        aria-label={`Eliminar ${label}`}
         onClick={() => onRemove(line)}
       >
         <IconTrash size={18} stroke={1.8} aria-hidden="true" />
@@ -109,6 +163,21 @@ function CartMenu() {
     titleRef.current?.focus()
   }
 
+  const announceQuantity = ({ lineId, brand, model }) => {
+    const line = cartStore.getItems().find((item) => item.lineId === lineId)
+    if (line) setAnnouncement(describeUnits(line.quantity, `${brand} ${model}`))
+  }
+
+  // Subtracting the last unit removes the line, like the remove button
+  const decreaseLine = (line) => {
+    if (line.quantity === 1) {
+      removeLine(line)
+      return
+    }
+    cartStore.decrease(line.lineId)
+    announceQuantity(line)
+  }
+
   const emptyCart = () => {
     cartStore.clear()
     setAnnouncement('Cesta vaciada.')
@@ -152,6 +221,8 @@ function CartMenu() {
                   <CartLine
                     key={line.lineId}
                     line={line}
+                    onIncreased={announceQuantity}
+                    onDecrease={decreaseLine}
                     onRemove={removeLine}
                     onOpen={close}
                   />
