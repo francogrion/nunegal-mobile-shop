@@ -67,15 +67,18 @@ src/
 │   ├── httpClient.js   Cliente HTTP (fetch + errores tipados ApiError)
 │   ├── normalizers.js  Adaptadores de la respuesta de la API al modelo de la app
 │   └── products.js     Servicio de productos y cesta (con caché)
-├── components/       Componentes reutilizables (Header, Layout, ProductCard, SearchBar,
-│                     ProductSpecs, ProductActions, OptionSelector)
-├── hooks/            Hooks de datos (useResource y sus envoltorios useProducts / useProduct)
+├── components/       Componentes reutilizables (Header, Breadcrumbs, Layout, ProductCard,
+│                     SearchBar, ProductSpecs, ProductActions, OptionSelector)
+├── hooks/            Hooks (useResource y sus envoltorios useProducts / useProduct,
+│                     useCartCount, useAddToCart)
 ├── pages/            Una carpeta por ruta (ProductListPage, ProductDetailPage, NotFoundPage)
+├── store/            Estado global de la cesta (cartStore)
 ├── styles/           Estilos globales y variables de diseño
 ├── test/             Configuración de tests, helpers, servidor MSW y fixtures
-├── utils/            Funciones puras (formato de precio, filtrado de productos)
+├── utils/            Funciones puras (precio, filtrado, acceso seguro a localStorage)
 ├── App.jsx           Definición de rutas
-└── main.jsx          Punto de entrada (monta el router)
+├── main.jsx          Punto de entrada (monta el router)
+└── routes.js         Rutas compartidas (patrón y generador de la URL de detalle)
 ```
 
 Los tests conviven junto al código que prueban (`*.test.js` / `*.test.jsx`).
@@ -99,7 +102,14 @@ Los precios se muestran en euros con formato español (`170 €`); la API no ind
 - Tabla de **especificaciones** con marca, modelo, precio, CPU, RAM, sistema operativo, resolución y tamaño de pantalla, batería, cámaras principal y frontal, dimensiones y peso. Los datos que la API no proporciona se muestran como _No disponible_.
 - **Selectores de almacenamiento y color** como grupos de botones de opción accesibles. Si solo hay una opción, se muestra igualmente y viene seleccionada; si hay varias, ninguna se preselecciona para que el usuario elija de forma explícita.
 - El enlace **Volver al listado** regresa al listado del que venía el usuario, conservando su búsqueda; si se abrió el detalle directamente, lleva al listado completo.
+- Botón **Añadir a la cesta**, activo cuando hay almacenamiento y color seleccionados. Envía a la API el identificador del producto y los códigos de color y almacenamiento, se desactiva mientras la petición está en curso (evitando envíos dobles) y confirma el resultado o muestra un error.
 - Estados de carga y de error con opción de reintento.
+
+### Cabecera y cesta
+
+- El nombre de la aplicación enlaza con el listado.
+- **Migas de pan** con la página actual (`Catálogo`, `Catálogo › Acer Iconia Talk S` o `Catálogo › Página no encontrada`). El nombre del producto reutiliza la petición de la página de detalle, sin llamadas extra a la API.
+- **Contador de la cesta** en la parte derecha, visible en todas las vistas. Se guarda en `localStorage`, por lo que se mantiene al recargar, y se sincroniza entre pestañas abiertas; si el navegador bloquea el almacenamiento, sigue funcionando en memoria durante la sesión.
 
 Las rutas desconocidas muestran una página 404 con un enlace de vuelta al catálogo.
 
@@ -127,7 +137,7 @@ Las respuestas de `GET /api/product` y `GET /api/product/:id` se guardan en `loc
 
 Antes de empezar a desarrollar se analizaron las respuestas reales de la API. Estas son las particularidades encontradas y cómo se tratan en la aplicación:
 
-- **`POST /api/cart` siempre devuelve `{ "count": 1 }`**: el servicio no guarda estado entre peticiones, así que usar el valor tal cual dejaría la cesta siempre en 1. El contador de la cabecera acumulará en cliente el `count` de cada respuesta y se persistirá en `localStorage`.
+- **`POST /api/cart` siempre devuelve `{ "count": 1 }`**: el servicio no guarda estado entre peticiones, así que usar el valor tal cual dejaría la cesta siempre en 1. Por eso el contador de la cabecera acumula en cliente el `count` de cada respuesta y lo persiste en `localStorage`. Si la API pasara a devolver el total real de la cesta, bastaría con cambiar la suma por una asignación en [`useAddToCart.js`](src/hooks/useAddToCart.js).
 - **Arranque en frío**: la API está alojada en Render y, tras un tiempo sin uso, la primera petición puede tardar en torno a un minuto. La caché en cliente evita repetir peticiones y comparte las simultáneas; la interfaz muestra estados de carga y de error con opción de reintento.
 - **Precios vacíos**: el precio llega como texto y algunos productos lo tienen vacío (`""`). Se convierte a número, o a `null` cuando no hay precio, y estos productos se muestran como _Precio no disponible_.
 - **Nombres de campo con erratas** (`dimentions`, `secondaryCmera`) y **campos intercambiados** (`displayResolution` contiene el tamaño en pulgadas y `displaySize` la resolución en píxeles). La respuesta se normaliza en la capa de API ([`normalizers.js`](src/api/normalizers.js)), de forma que los componentes trabajan con un modelo limpio.
@@ -143,5 +153,5 @@ El desarrollo se organiza en hitos incrementales, cada uno reflejado en el histo
 - [x] **2. Capa de API y caché**: cliente HTTP, normalización de datos y caché en cliente con expiración de 1 hora.
 - [x] **3. Listado (PLP)**: enrutado, cuadrícula adaptable de hasta 4 columnas y búsqueda en tiempo real.
 - [x] **4. Detalle (PDP)**: vista en dos columnas con imagen, especificaciones y selectores de opciones.
-- [ ] **5. Cesta y cabecera**: añadir a la cesta, contador persistido y breadcrumbs.
+- [x] **5. Cesta y cabecera**: añadir a la cesta, contador persistido y breadcrumbs.
 - [ ] **6. Pulido**: accesibilidad, estados de carga y error, y ampliación de tests.
