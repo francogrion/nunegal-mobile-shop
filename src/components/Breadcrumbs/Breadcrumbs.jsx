@@ -20,19 +20,19 @@ function CurrentPage({ pathname }) {
 
 function Breadcrumbs() {
   const { pathname } = useLocation()
-  const isCatalog = pathname === '/'
+  const isHome = pathname === '/'
 
   return (
     <nav aria-label="Migas de pan" className={styles.breadcrumbs}>
       <ol className={styles.list}>
         <li className={styles.item}>
-          {isCatalog ? (
-            <span aria-current="page">Catálogo</span>
+          {isHome ? (
+            <span aria-current="page">Inicio</span>
           ) : (
-            <Link to="/">Catálogo</Link>
+            <Link to="/">Inicio</Link>
           )}
         </li>
-        {!isCatalog && (
+        {!isHome && (
           <li className={styles.item}>
             <span aria-current="page">
               <CurrentPage pathname={pathname} />

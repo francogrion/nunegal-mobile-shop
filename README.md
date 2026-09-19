@@ -156,7 +156,7 @@ Los precios se muestran en euros con formato español (`170 €`); la API no ind
 ### Cabecera y cesta
 
 - El nombre de la aplicación enlaza con el listado.
-- **Migas de pan** con la página actual (`Catálogo`, `Catálogo / Acer Iconia Talk S` o `Catálogo / Página no encontrada`). El nombre del producto reutiliza la petición de la página de detalle, sin llamadas extra a la API.
+- **Migas de pan** con la página actual (`Inicio`, `Inicio / Acer Iconia Talk S` o `Inicio / Página no encontrada`). El nombre del producto reutiliza la petición de la página de detalle, sin llamadas extra a la API.
 - **Contador de la cesta** en la parte derecha, visible en todas las vistas. Se guarda en `localStorage`, por lo que se mantiene al recargar, y se sincroniza entre pestañas abiertas; si el navegador bloquea el almacenamiento, sigue funcionando en memoria durante la sesión.
 
 ### Detalles transversales

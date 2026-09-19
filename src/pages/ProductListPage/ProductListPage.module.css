@@ -1,30 +1,9 @@
 .hero {
-  padding: var(--space-8) 0 var(--space-2);
-}
-
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--color-accent);
-}
-
-.eyebrow::before {
-  content: '';
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: var(--color-accent);
-  box-shadow: 0 0 0 4px var(--color-accent-soft);
+  padding: var(--space-10) 0 var(--space-2);
 }
 
 .title {
-  margin: var(--space-3) 0 0;
+  margin: 0;
   font-family: var(--font-display);
   font-size: clamp(2.25rem, 1.4rem + 3.6vw, 3.625rem);
   font-weight: 700;

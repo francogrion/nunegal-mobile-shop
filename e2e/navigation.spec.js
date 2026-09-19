@@ -19,13 +19,13 @@ test.describe('Navegación', () => {
     )
   })
 
-  test('goes to the catalog from the app name and the breadcrumbs', async ({
+  test('goes to the home page from the app name and the breadcrumbs', async ({
     page,
   }) => {
     await page.goto('/product/ZmGrkLRPXOTpxsU4jjAcv')
     await page
       .getByRole('navigation', { name: 'Migas de pan' })
-      .getByRole('link', { name: 'Catálogo' })
+      .getByRole('link', { name: 'Inicio' })
       .click()
     await expect(page).toHaveURL('/')
 

@@ -55,9 +55,6 @@ function ProductListPage() {
     <section>
       <PageTitle title="Catálogo de móviles" />
       <div className={styles.hero}>
-        <p className={styles.eyebrow} aria-hidden="true">
-          Catálogo
-        </p>
         <h1 className={styles.title}>
           Catálogo de <em>móviles</em>
         </h1>

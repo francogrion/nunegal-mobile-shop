@@ -69,23 +69,23 @@ describe('App breadcrumbs', () => {
   const getBreadcrumbs = () =>
     within(screen.getByRole('navigation', { name: 'Migas de pan' }))
 
-  it('shows the catalog as the current page on the home page', () => {
+  it('shows the home page as the current page', () => {
     mockProductListEndpoint()
     renderApp({ route: '/' })
 
-    expect(getBreadcrumbs().getByText('Catálogo')).toHaveAttribute(
+    expect(getBreadcrumbs().getByText('Inicio')).toHaveAttribute(
       'aria-current',
       'page',
     )
     expect(getBreadcrumbs().queryByRole('link')).not.toBeInTheDocument()
   })
 
-  it('shows the product as the current page and links to the catalog on the details page', async () => {
+  it('shows the product as the current page and links to the home page on the details page', async () => {
     const endpoint = mockProductDetailEndpoint()
     renderApp({ route: '/product/ZmGrkLRPXOTpxsU4jjAcv' })
 
     expect(
-      getBreadcrumbs().getByRole('link', { name: 'Catálogo' }),
+      getBreadcrumbs().getByRole('link', { name: 'Inicio' }),
     ).toHaveAttribute('href', '/')
     expect(
       await getBreadcrumbs().findByText('Acer Iconia Talk S'),
@@ -98,12 +98,21 @@ describe('App breadcrumbs', () => {
     renderApp({ route: '/does-not-exist' })
 
     expect(
-      getBreadcrumbs().getByRole('link', { name: 'Catálogo' }),
+      getBreadcrumbs().getByRole('link', { name: 'Inicio' }),
     ).toHaveAttribute('href', '/')
     expect(getBreadcrumbs().getByText('Página no encontrada')).toHaveAttribute(
       'aria-current',
       'page',
     )
+  })
+
+  it('mentions the catalog only once on the home page', async () => {
+    mockProductListEndpoint()
+    renderApp({ route: '/' })
+    await screen.findByRole('list', { name: 'Productos' })
+
+    // Only in the main heading: no repeated eyebrow or breadcrumb
+    expect(screen.getAllByText(/catálogo/i)).toHaveLength(1)
   })
 })
 
