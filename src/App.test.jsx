@@ -1,10 +1,10 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { CART_STORAGE_KEY } from './store/cartStore.js'
 import {
   mockProductDetailEndpoint,
   mockProductListEndpoint,
 } from './test/apiMocks.js'
+import { cartLines, seedCart } from './test/cart.js'
 import { renderApp } from './test/renderApp.jsx'
 
 describe('App', () => {
@@ -55,7 +55,7 @@ describe('App header cart', () => {
   })
 
   it('shows the cart count saved on a previous visit', () => {
-    localStorage.setItem(CART_STORAGE_KEY, '3')
+    seedCart([cartLines.iconiaTalkS, cartLines.liquidZ6Plus])
 
     renderApp()
 

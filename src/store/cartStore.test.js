@@ -1,55 +1,157 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createCartStore } from './cartStore.js'
 
-const KEY = 'test:cart-count'
+const KEY = 'test:cart'
+
+const iconia32Black = {
+  productId: 'ZmGrkLRPXOTpxsU4jjAcv',
+  brand: 'Acer',
+  model: 'Iconia Talk S',
+  imageUrl: 'https://itx-frontend-test.onrender.com/images/iconia.jpg',
+  price: 170,
+  storageCode: 2001,
+  storageName: '32 GB',
+  colorCode: 1000,
+  colorName: 'Black',
+}
+const iconia16Black = {
+  ...iconia32Black,
+  storageCode: 2000,
+  storageName: '16 GB',
+}
 
 describe('createCartStore', () => {
   it('starts with an empty cart', () => {
     const store = createCartStore({ key: KEY })
 
+    expect(store.getItems()).toEqual([])
     expect(store.getCount()).toBe(0)
   })
 
-  it('adds the given amount of products to the count', () => {
+  it('adds a product variant as a cart line with the given quantity', () => {
     const store = createCartStore({ key: KEY })
 
-    store.add(1)
-    store.add(2)
+    store.add(iconia32Black, 1)
+
+    expect(store.getItems()).toEqual([
+      {
+        ...iconia32Black,
+        lineId: 'ZmGrkLRPXOTpxsU4jjAcv:2001:1000',
+        quantity: 1,
+      },
+    ])
+  })
+
+  it('adds up repeated additions of the same variant in a single line', () => {
+    const store = createCartStore({ key: KEY })
+
+    store.add(iconia32Black, 1)
+    store.add(iconia32Black, 2)
+
+    expect(store.getItems()).toHaveLength(1)
+    expect(store.getItems()[0].quantity).toBe(3)
+  })
+
+  it('keeps different variants of a product in separate lines', () => {
+    const store = createCartStore({ key: KEY })
+
+    store.add(iconia32Black, 1)
+    store.add(iconia16Black, 1)
+
+    expect(store.getItems().map(({ storageName }) => storageName)).toEqual([
+      '32 GB',
+      '16 GB',
+    ])
+  })
+
+  it('counts every unit in the cart', () => {
+    const store = createCartStore({ key: KEY })
+
+    store.add(iconia32Black, 2)
+    store.add(iconia16Black, 1)
 
     expect(store.getCount()).toBe(3)
   })
 
-  it('persists the count so it survives a page reload', () => {
-    createCartStore({ key: KEY }).add(2)
+  it('removes a line from the cart', () => {
+    const store = createCartStore({ key: KEY })
+    store.add(iconia32Black, 2)
+    store.add(iconia16Black, 1)
+
+    store.remove('ZmGrkLRPXOTpxsU4jjAcv:2001:1000')
+
+    expect(store.getItems().map(({ storageName }) => storageName)).toEqual([
+      '16 GB',
+    ])
+    expect(store.getCount()).toBe(1)
+  })
+
+  it('empties the cart', () => {
+    const store = createCartStore({ key: KEY })
+    store.add(iconia32Black, 2)
+
+    store.clear()
+
+    expect(store.getItems()).toEqual([])
+    expect(store.getCount()).toBe(0)
+  })
+
+  it('persists the cart so it survives a page reload', () => {
+    createCartStore({ key: KEY }).add(iconia32Black, 2)
 
     const storeAfterReload = createCartStore({ key: KEY })
 
-    expect(storeAfterReload.getCount()).toBe(2)
+    expect(storeAfterReload.getItems()).toEqual([
+      expect.objectContaining({ model: 'Iconia Talk S', quantity: 2 }),
+    ])
   })
 
-  it('notifies subscribers when the count changes until they unsubscribe', () => {
+  it('notifies subscribers when the cart changes until they unsubscribe', () => {
     const store = createCartStore({ key: KEY })
     const listener = vi.fn()
 
     const unsubscribe = store.subscribe(listener)
-    store.add(1)
+    store.add(iconia32Black, 1)
+    store.remove('ZmGrkLRPXOTpxsU4jjAcv:2001:1000')
+    store.clear()
     unsubscribe()
-    store.add(1)
+    store.add(iconia32Black, 1)
 
-    expect(listener).toHaveBeenCalledTimes(1)
+    expect(listener).toHaveBeenCalledTimes(3)
+  })
+
+  it('returns the same list of lines until the cart changes', () => {
+    const store = createCartStore({ key: KEY })
+    store.add(iconia32Black, 1)
+
+    const before = store.getItems()
+
+    expect(store.getItems()).toBe(before)
+    store.add(iconia32Black, 1)
+    expect(store.getItems()).not.toBe(before)
   })
 
   it.each([
-    ['text', 'many'],
-    ['a negative number', '-2'],
-    ['a decimal number', '1.5'],
-  ])('treats a stored %s as an empty cart', (_, storedValue) => {
+    ['malformed JSON', '{'],
+    ['an object instead of a list', '{"items":[]}'],
+    ['the count saved by previous versions', '3'],
+  ])('treats %s as an empty cart', (_, storedValue) => {
     localStorage.setItem(KEY, storedValue)
 
-    expect(createCartStore({ key: KEY }).getCount()).toBe(0)
+    expect(createCartStore({ key: KEY }).getItems()).toEqual([])
   })
 
-  it('keeps counting in memory when storage is not available', () => {
+  it('ignores stored lines that are not valid', () => {
+    const valid = { ...iconia32Black, lineId: 'a', quantity: 1 }
+    localStorage.setItem(
+      KEY,
+      JSON.stringify([valid, { ...valid, quantity: 0 }, { model: 'Unknown' }]),
+    )
+
+    expect(createCartStore({ key: KEY }).getItems()).toEqual([valid])
+  })
+
+  it('keeps the cart in memory when storage is not available', () => {
     const failingStorage = {
       getItem: () => {
         throw new DOMException('Access denied', 'SecurityError')
@@ -60,22 +162,21 @@ describe('createCartStore', () => {
     }
     const store = createCartStore({ key: KEY, storage: failingStorage })
 
-    store.add(1)
-    store.add(2)
+    store.add(iconia32Black, 1)
+    store.add(iconia16Black, 2)
 
     expect(store.getCount()).toBe(3)
   })
 
-  it('picks up the count updated from another browser tab', () => {
+  it('picks up the cart updated from another browser tab', () => {
     const store = createCartStore({ key: KEY })
     const listener = vi.fn()
     store.subscribe(listener)
 
     // Another tab writes the storage and the browser fires a `storage` event
-    localStorage.setItem(KEY, '5')
-    window.dispatchEvent(
-      new StorageEvent('storage', { key: KEY, newValue: '5' }),
-    )
+    const otherTabCart = [{ ...iconia32Black, lineId: 'a', quantity: 5 }]
+    localStorage.setItem(KEY, JSON.stringify(otherTabCart))
+    window.dispatchEvent(new StorageEvent('storage', { key: KEY }))
 
     expect(listener).toHaveBeenCalled()
     expect(store.getCount()).toBe(5)
@@ -83,7 +184,7 @@ describe('createCartStore', () => {
 
   it('empties the cart when another tab clears the storage', () => {
     const store = createCartStore({ key: KEY })
-    store.add(3)
+    store.add(iconia32Black, 3)
     const listener = vi.fn()
     store.subscribe(listener)
 

@@ -22,7 +22,11 @@ function ProductActions({ product }) {
   }))
 
   const handleAdd = () => {
-    add({ id: product.id, colorCode, storageCode })
+    add({
+      product,
+      storage: storages.find(({ code }) => code === storageCode),
+      color: colors.find(({ code }) => code === colorCode),
+    })
   }
 
   // A previous confirmation no longer applies to a different selection.
