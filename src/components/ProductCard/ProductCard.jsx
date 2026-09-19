@@ -1,12 +1,19 @@
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { formatPrice } from '../../utils/formatPrice.js'
 import styles from './ProductCard.module.css'
 
 function ProductCard({ product }) {
   const { id, brand, model, price, imageUrl } = product
+  // Remember the list the user comes from (e.g. with a search applied), so
+  // the details page can link back to it.
+  const location = useLocation()
 
   return (
-    <Link className={styles.card} to={`/product/${id}`}>
+    <Link
+      className={styles.card}
+      to={`/product/${id}`}
+      state={{ from: location }}
+    >
       {/* Decorative: brand and model are already announced as text */}
       <img className={styles.image} src={imageUrl} alt="" loading="lazy" />
       <div className={styles.info}>

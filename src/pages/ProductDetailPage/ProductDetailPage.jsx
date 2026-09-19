@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router'
+import { Link, useLocation, useParams } from 'react-router'
 import ProductActions from '../../components/ProductActions/ProductActions.jsx'
 import ProductSpecs from '../../components/ProductSpecs/ProductSpecs.jsx'
 import { useProduct } from '../../hooks/useProduct.js'
@@ -8,10 +8,14 @@ import styles from './ProductDetailPage.module.css'
 function ProductDetailPage() {
   const { productId } = useParams()
   const { status, product, retry } = useProduct(productId)
+  // Back to the list the user came from, or to the full list when the page
+  // was opened directly (e.g. from a shared link).
+  const { state } = useLocation()
+  const backTo = state?.from ?? '/'
 
   return (
     <article>
-      <Link className={styles.back} to="/">
+      <Link className={styles.back} to={backTo}>
         <span aria-hidden="true">← </span>Volver al listado
       </Link>
 

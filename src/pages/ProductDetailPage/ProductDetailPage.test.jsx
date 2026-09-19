@@ -2,7 +2,10 @@ import { screen, within } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { API_BASE_URL } from '../../api/config.js'
-import { mockProductDetailEndpoint } from '../../test/apiMocks.js'
+import {
+  mockProductDetailEndpoint,
+  mockProductListEndpoint,
+} from '../../test/apiMocks.js'
 import { rawProductDetail } from '../../test/fixtures/products.js'
 import { renderApp } from '../../test/renderApp.jsx'
 import { server } from '../../test/server.js'
@@ -66,6 +69,23 @@ describe('ProductDetailPage', () => {
     expect(
       screen.getByRole('link', { name: 'Volver al listado' }),
     ).toHaveAttribute('href', '/')
+  })
+
+  it('goes back to the product list keeping the search the user came from', async () => {
+    mockProductListEndpoint()
+    mockProductDetailEndpoint()
+    const { user, getLocation } = renderApp({ route: '/?search=iconia' })
+
+    await user.click(await screen.findByRole('link', { name: /Iconia Talk S/ }))
+    await findProductHeading()
+    await user.click(screen.getByRole('link', { name: 'Volver al listado' }))
+
+    expect(getLocation().search).toBe('?search=iconia')
+    expect(
+      await screen.findByRole('searchbox', {
+        name: 'Buscar por marca o modelo',
+      }),
+    ).toHaveValue('iconia')
   })
 
   it('shows an error that can be retried when the product cannot be loaded', async () => {
