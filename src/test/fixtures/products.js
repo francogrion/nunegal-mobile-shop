@@ -27,6 +27,14 @@ export const rawProductList = [
     imgUrl:
       'https://itx-frontend-test.onrender.com/images/pMZMhe_ZaAPZoaCCtlDrg.jpg',
   },
+  {
+    id: 'AasKFs5EGbyAEIKkcHQcF',
+    brand: 'alcatel',
+    model: 'Flash (2017)',
+    price: '',
+    imgUrl:
+      'https://itx-frontend-test.onrender.com/images/AasKFs5EGbyAEIKkcHQcF.jpg',
+  },
 ]
 
 export const rawProductDetail = {

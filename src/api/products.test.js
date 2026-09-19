@@ -1,6 +1,11 @@
 import { http, HttpResponse } from 'msw'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { rawProductDetail, rawProductList } from '../test/fixtures/products.js'
+import {
+  mockCartEndpoint,
+  mockProductDetailEndpoint,
+  mockProductListEndpoint,
+} from '../test/apiMocks.js'
 import { server } from '../test/server.js'
 import { API_BASE_URL } from './config.js'
 import { ApiError } from './httpClient.js'
@@ -9,20 +14,6 @@ import {
   normalizeProductSummary,
 } from './normalizers.js'
 import { addToCart, getProduct, getProducts } from './products.js'
-
-const mockProductListEndpoint = () => {
-  const resolver = vi.fn(() => HttpResponse.json(rawProductList))
-  server.use(http.get(`${API_BASE_URL}/api/product`, resolver))
-  return resolver
-}
-
-const mockProductDetailEndpoint = () => {
-  const resolver = vi.fn(({ params }) =>
-    HttpResponse.json({ ...rawProductDetail, id: params.id }),
-  )
-  server.use(http.get(`${API_BASE_URL}/api/product/:id`, resolver))
-  return resolver
-}
 
 describe('getProducts', () => {
   it('resolves with the normalized product list', async () => {
@@ -49,12 +40,6 @@ describe('addToCart', () => {
     id: 'ZmGrkLRPXOTpxsU4jjAcv',
     colorCode: 1000,
     storageCode: 2000,
-  }
-
-  const mockCartEndpoint = () => {
-    const resolver = vi.fn(() => HttpResponse.json({ count: 1 }))
-    server.use(http.post(`${API_BASE_URL}/api/cart`, resolver))
-    return resolver
   }
 
   it('sends the selected product options', async () => {
