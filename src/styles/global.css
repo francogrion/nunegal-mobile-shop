@@ -59,23 +59,3 @@ a {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
-
-.app-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-4) var(--space-6);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.app-header__brand {
-  font-weight: 700;
-  font-size: 1.25rem;
-  text-decoration: none;
-}
-
-.app-main {
-  max-width: var(--content-width);
-  margin: 0 auto;
-  padding: var(--space-6);
-}
