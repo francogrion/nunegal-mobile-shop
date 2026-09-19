@@ -1,15 +1,10 @@
-import { IconDeviceMobile, IconShoppingBag } from '@tabler/icons-react'
+import { IconDeviceMobile } from '@tabler/icons-react'
 import { Link } from 'react-router'
-import { useCartCount } from '../../hooks/useCartCount.js'
 import Breadcrumbs from '../Breadcrumbs/Breadcrumbs.jsx'
+import CartMenu from '../CartMenu/CartMenu.jsx'
 import styles from './Header.module.css'
 
-const describeCart = (count) =>
-  `${count} ${count === 1 ? 'producto' : 'productos'} en la cesta`
-
 function Header() {
-  const cartCount = useCartCount()
-
   return (
     <header className={styles.header}>
       <Link className={styles.brand} to="/">
@@ -21,20 +16,7 @@ function Header() {
       <div className={styles.breadcrumbs}>
         <Breadcrumbs />
       </div>
-      <p className={styles.cart}>
-        <IconShoppingBag
-          className={styles.cartIcon}
-          size={20}
-          stroke={1.8}
-          aria-hidden="true"
-        />
-        {/* The visible number is hidden from screen readers, which read the
-            full sentence instead. */}
-        <span className={styles.cartCount} aria-hidden="true">
-          {cartCount}
-        </span>
-        <span className="visually-hidden">{describeCart(cartCount)}</span>
-      </p>
+      <CartMenu />
     </header>
   )
 }

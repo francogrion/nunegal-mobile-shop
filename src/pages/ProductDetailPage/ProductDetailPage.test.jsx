@@ -468,4 +468,20 @@ describe('ProductDetailPage add to cart', () => {
 
     expect(screen.getByRole('button', { name: 'Añadiendo…' })).toBeDisabled()
   })
+
+  it('adds the product with the chosen options to the cart', async () => {
+    mockProductDetailEndpoint()
+    mockCartEndpoint()
+    const { user } = await renderProductAndChooseStorage()
+
+    await user.click(getAddButton())
+    await screen.findByText('Producto añadido a la cesta.')
+    await user.click(screen.getByRole('button', { name: /en la cesta$/ }))
+
+    const cart = screen.getByRole('region', { name: 'Cesta' })
+    const [line] = within(cart).getAllByRole('listitem')
+    expect(line).toHaveTextContent('Acer Iconia Talk S')
+    expect(line).toHaveTextContent('32 GB · Black')
+    expect(line).toHaveTextContent('1 × 170 €')
+  })
 })

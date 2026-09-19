@@ -26,6 +26,19 @@ const pages = [
   },
 ]
 
+const auditAccessibility = async (page) => {
+  const { violations } = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .analyze()
+
+  // Only the relevant details, so a failure is readable
+  return violations.map(({ id, help, nodes }) => ({
+    id,
+    help,
+    targets: nodes.map((node) => node.target.join(' ')),
+  }))
+}
+
 for (const { name, path, ready } of pages) {
   test(`the ${name} page has no detectable accessibility issues`, async ({
     page,
@@ -33,16 +46,18 @@ for (const { name, path, ready } of pages) {
     await page.goto(path)
     await expect(ready(page)).toBeVisible()
 
-    const { violations } = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-      .analyze()
-
-    // Only the relevant details, so a failure is readable
-    const issues = violations.map(({ id, help, nodes }) => ({
-      id,
-      help,
-      targets: nodes.map((node) => node.target.join(' ')),
-    }))
-    expect(issues).toEqual([])
+    expect(await auditAccessibility(page)).toEqual([])
   })
 }
+
+test('the open cart panel has no detectable accessibility issues', async ({
+  page,
+}) => {
+  await page.goto('/product/ZmGrkLRPXOTpxsU4jjAcv')
+  await page.getByText('32 GB', { exact: true }).click()
+  await page.getByRole('button', { name: 'Añadir a la cesta' }).click()
+  await page.getByRole('button', { name: '1 producto en la cesta' }).click()
+  await expect(page.getByRole('region', { name: 'Cesta' })).toBeVisible()
+
+  expect(await auditAccessibility(page)).toEqual([])
+})

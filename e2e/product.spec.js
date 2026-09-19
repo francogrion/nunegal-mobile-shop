@@ -100,6 +100,34 @@ test.describe('Detalle de producto', () => {
     await expect(cartSummary(page, '1 producto en la cesta')).toBeAttached()
   })
 
+  test('lists the added product in the cart, where it can be removed', async ({
+    page,
+  }) => {
+    await page.goto(PRODUCT_PATH)
+    await page.getByText('32 GB', { exact: true }).click()
+    await page.getByRole('button', { name: 'Añadir a la cesta' }).click()
+    await expect(page.getByRole('status')).toHaveText(
+      'Producto añadido a la cesta.',
+    )
+
+    await page.getByRole('button', { name: '1 producto en la cesta' }).click()
+    const cart = page.getByRole('region', { name: 'Cesta' })
+    await expect(cart.getByRole('listitem')).toHaveCount(1)
+    await expect(cart.getByRole('listitem')).toContainText('32 GB · Black')
+    await expect(cart.getByText(/^Total/)).toContainText('170')
+
+    await cart
+      .getByRole('button', {
+        name: 'Eliminar Acer Iconia Talk S, 32 GB, Black',
+      })
+      .click()
+
+    await expect(cart).toContainText('Tu cesta está vacía')
+    await expect(
+      page.getByRole('button', { name: '0 productos en la cesta' }),
+    ).toBeVisible()
+  })
+
   test('goes back to the list where the user left it', async ({ page }) => {
     await page.goto('/')
     const product = page

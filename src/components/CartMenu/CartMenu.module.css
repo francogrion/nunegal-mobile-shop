@@ -1,0 +1,215 @@
+.cartMenu {
+  position: relative;
+  margin-left: auto;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.button:hover,
+.button[aria-expanded='true'] {
+  border-color: var(--color-accent);
+}
+
+.count {
+  min-width: 1.375rem;
+  height: 1.375rem;
+  padding: 0 var(--space-2);
+  border-radius: 0.4375rem;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.375rem;
+  text-align: center;
+}
+
+/* Floats below the header, aligned with its right edge; on phones it spans
+   the width of the header. */
+.panel {
+  position: absolute;
+  top: calc(100% + var(--space-5));
+  right: calc(-1 * (var(--space-4) + 1px));
+  z-index: 20;
+  display: grid;
+  gap: var(--space-4);
+  width: min(24rem, calc(100vw - 2 * var(--space-3)));
+  max-height: min(75vh, 36rem);
+  padding: var(--space-5);
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow:
+    0 12px 32px rgb(15 23 42 / 0.14),
+    0 2px 6px rgb(15 23 42 / 0.06);
+}
+
+/* On phones the header wraps the breadcrumbs onto a second row, so the panel
+   is placed relative to the whole header (the sticky header is its containing
+   block once the menu is not positioned) and opens below it. */
+@media (max-width: 47.99rem) {
+  .cartMenu {
+    position: static;
+  }
+
+  .panel {
+    top: calc(100% + var(--space-2));
+    right: 0;
+    left: 0;
+    width: auto;
+  }
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+}
+
+.title:focus-visible {
+  outline-offset: 4px;
+}
+
+.empty {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.lines {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.line {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr auto auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px dashed var(--color-border);
+}
+
+.thumb {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: var(--radius);
+  background: var(--color-surface-2);
+}
+
+.thumbImage {
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+.lineInfo {
+  min-width: 0;
+}
+
+.name {
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.name:hover {
+  color: var(--color-accent);
+}
+
+.variant,
+.quantity,
+.lineTotal {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.variant,
+.quantity {
+  color: var(--color-text-muted);
+}
+
+.lineTotal {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.remove {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.remove:hover {
+  background: rgb(185 28 28 / 0.08);
+  color: var(--color-danger);
+}
+
+.summary {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0;
+  font-weight: 600;
+}
+
+.total strong {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  color: var(--color-accent);
+}
+
+.note {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-danger);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.clear:hover {
+  border-color: var(--color-danger);
+}
