@@ -9,7 +9,7 @@ Consta de dos vistas:
 
 ## Requisitos
 
-- Node.js `>= 22.13` (la versión de referencia está en [`.nvmrc`](.nvmrc); con nvm basta con `nvm use`)
+- Node.js `>= 22.22` (mínimo exigido por React Router 8); la versión de referencia está en [`.nvmrc`](.nvmrc) y con nvm basta con `nvm use`
 - npm `>= 10`
 
 ## Puesta en marcha
@@ -36,6 +36,8 @@ La aplicación queda disponible en <http://localhost:5173>.
 ## Stack
 
 - **[React 19](https://react.dev/)** con **[Vite](https://vite.dev/)** como bundler y servidor de desarrollo.
+- **[React Router 8](https://reactrouter.com/)** en modo declarativo para el enrutado en cliente.
+- **CSS Modules** para los estilos de cada componente, sobre unas variables de diseño globales (colores, espaciados).
 - **[Vitest](https://vitest.dev/)** + **[Testing Library](https://testing-library.com/)** (sobre jsdom) para los tests, y **[MSW](https://mswjs.io/)** para simular la API a nivel de red.
 - **[ESLint](https://eslint.org/)** (reglas recomendadas, reglas de hooks de React y de Fast Refresh) y **[Prettier](https://prettier.io/)** para la calidad y el formato del código.
 
@@ -65,13 +67,32 @@ src/
 │   ├── httpClient.js   Cliente HTTP (fetch + errores tipados ApiError)
 │   ├── normalizers.js  Adaptadores de la respuesta de la API al modelo de la app
 │   └── products.js     Servicio de productos y cesta (con caché)
+├── components/       Componentes reutilizables (Header, Layout, ProductCard, SearchBar)
+├── hooks/            Hooks de datos (useProducts)
+├── pages/            Una carpeta por ruta (ProductListPage, NotFoundPage)
 ├── styles/           Estilos globales y variables de diseño
-├── test/             Configuración de tests, servidor MSW y fixtures
-├── App.jsx
-└── main.jsx
+├── test/             Configuración de tests, helpers, servidor MSW y fixtures
+├── utils/            Funciones puras (formato de precio, filtrado de productos)
+├── App.jsx           Definición de rutas
+└── main.jsx          Punto de entrada (monta el router)
 ```
 
 Los tests conviven junto al código que prueban (`*.test.js` / `*.test.jsx`).
+
+## Funcionalidades
+
+### Listado de productos (`/`)
+
+- Muestra todos los productos de la API en una **cuadrícula adaptable**: 1 columna en móvil y 2, 3 o 4 columnas según el ancho de pantalla (máximo 4).
+- Cada tarjeta muestra imagen, marca, modelo y precio, y enlaza al detalle del producto (`/product/:id`).
+- **Búsqueda en tiempo real** por marca y modelo: se filtra con cada pulsación, sin distinguir mayúsculas, y cada palabra buscada debe aparecer en la marca o el modelo en cualquier orden (`z6 acer` encuentra _Acer Liquid Z6_).
+- La búsqueda se guarda en la URL (`/?search=jade`), de forma que se puede compartir y se conserva al volver atrás desde un producto.
+- Una región de estado accesible anuncia la carga y el número de resultados, y hay un mensaje específico cuando ninguna coincide.
+- Si la API falla, se muestra un aviso con un botón para reintentar.
+
+Los precios se muestran en euros con formato español (`170 €`); la API no indica la moneda, así que se asume euro.
+
+Las rutas desconocidas muestran una página 404 con un enlace de vuelta al catálogo.
 
 ## API
 
@@ -98,8 +119,8 @@ Las respuestas de `GET /api/product` y `GET /api/product/:id` se guardan en `loc
 Antes de empezar a desarrollar se analizaron las respuestas reales de la API. Estas son las particularidades encontradas y cómo se tratan en la aplicación:
 
 - **`POST /api/cart` siempre devuelve `{ "count": 1 }`**: el servicio no guarda estado entre peticiones, así que usar el valor tal cual dejaría la cesta siempre en 1. El contador de la cabecera acumulará en cliente el `count` de cada respuesta y se persistirá en `localStorage`.
-- **Arranque en frío**: la API está alojada en Render y, tras un tiempo sin uso, la primera petición puede tardar en torno a un minuto. La caché en cliente evita repetir peticiones y comparte las simultáneas; la interfaz mostrará estados de carga y de error con opción de reintento.
-- **Precios vacíos**: el precio llega como texto y algunos productos lo tienen vacío (`""`). Se convierte a número, o a `null` cuando no hay precio, y estos productos se mostrarán como _precio no disponible_.
+- **Arranque en frío**: la API está alojada en Render y, tras un tiempo sin uso, la primera petición puede tardar en torno a un minuto. La caché en cliente evita repetir peticiones y comparte las simultáneas; la interfaz muestra estados de carga y de error con opción de reintento.
+- **Precios vacíos**: el precio llega como texto y algunos productos lo tienen vacío (`""`). Se convierte a número, o a `null` cuando no hay precio, y estos productos se muestran como _Precio no disponible_.
 - **Nombres de campo con erratas** (`dimentions`, `secondaryCmera`) y **campos intercambiados** (`displayResolution` contiene el tamaño en pulgadas y `displaySize` la resolución en píxeles). La respuesta se normaliza en la capa de API ([`normalizers.js`](src/api/normalizers.js)), de forma que los componentes trabajan con un modelo limpio.
 - **Tipos no homogéneos**: campos como `primaryCamera` llegan unas veces como array y otras como texto; se normalizan siempre a array.
 - **Unidades implícitas**: el peso llega como texto sin unidad (`"260"`); se convierte a número y se mostrará en gramos.
@@ -110,7 +131,7 @@ El desarrollo se organiza en hitos incrementales, cada uno reflejado en el histo
 
 - [x] **1. Proyecto base**: Vite + React, tests, lint, formato y README.
 - [x] **2. Capa de API y caché**: cliente HTTP, normalización de datos y caché en cliente con expiración de 1 hora.
-- [ ] **3. Listado (PLP)**: enrutado, cuadrícula adaptable de hasta 4 columnas y búsqueda en tiempo real.
+- [x] **3. Listado (PLP)**: enrutado, cuadrícula adaptable de hasta 4 columnas y búsqueda en tiempo real.
 - [ ] **4. Detalle (PDP)**: vista en dos columnas con imagen, especificaciones y selectores de opciones.
 - [ ] **5. Cesta y cabecera**: añadir a la cesta, contador persistido y breadcrumbs.
 - [ ] **6. Pulido**: accesibilidad, estados de carga y error, y ampliación de tests.
