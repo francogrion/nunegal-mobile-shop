@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router'
+import ProductSpecs from '../../components/ProductSpecs/ProductSpecs.jsx'
 import { useProduct } from '../../hooks/useProduct.js'
 import { formatPrice } from '../../utils/formatPrice.js'
 import styles from './ProductDetailPage.module.css'
@@ -40,6 +41,7 @@ function ProductDetailPage() {
               {product.brand} {product.model}
             </h1>
             <p className={styles.price}>{formatPrice(product.price)}</p>
+            <ProductSpecs product={product} />
           </div>
         </div>
       )}
