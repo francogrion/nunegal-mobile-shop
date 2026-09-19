@@ -1,4 +1,5 @@
 import { useSearchParams } from 'react-router'
+import PageTitle from '../../components/PageTitle/PageTitle.jsx'
 import ProductCard from '../../components/ProductCard/ProductCard.jsx'
 import SearchBar from '../../components/SearchBar/SearchBar.jsx'
 import { useProducts } from '../../hooks/useProducts.js'
@@ -26,6 +27,7 @@ function ProductListPage() {
 
   return (
     <section>
+      <PageTitle title="Catálogo de móviles" />
       <div className={styles.toolbar}>
         <h1 className={styles.title}>Catálogo de móviles</h1>
         <SearchBar value={search} onChange={handleSearchChange} />

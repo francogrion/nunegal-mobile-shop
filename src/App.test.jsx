@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { CART_STORAGE_KEY } from './store/cartStore.js'
 import {
@@ -103,6 +103,34 @@ describe('App breadcrumbs', () => {
     expect(getBreadcrumbs().getByText('Página no encontrada')).toHaveAttribute(
       'aria-current',
       'page',
+    )
+  })
+})
+
+describe('App document title', () => {
+  it('names the catalog page', async () => {
+    mockProductListEndpoint()
+    renderApp({ route: '/' })
+
+    await waitFor(() =>
+      expect(document.title).toBe('Catálogo de móviles · Mobile Shop'),
+    )
+  })
+
+  it('names the details page after the product', async () => {
+    mockProductDetailEndpoint()
+    renderApp({ route: '/product/ZmGrkLRPXOTpxsU4jjAcv' })
+
+    await waitFor(() =>
+      expect(document.title).toBe('Acer Iconia Talk S · Mobile Shop'),
+    )
+  })
+
+  it('names the not found page', async () => {
+    renderApp({ route: '/does-not-exist' })
+
+    await waitFor(() =>
+      expect(document.title).toBe('Página no encontrada · Mobile Shop'),
     )
   })
 })

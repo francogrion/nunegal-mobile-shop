@@ -1,4 +1,5 @@
 import { Link, useLocation, useParams } from 'react-router'
+import PageTitle from '../../components/PageTitle/PageTitle.jsx'
 import ProductActions from '../../components/ProductActions/ProductActions.jsx'
 import ProductImage from '../../components/ProductImage/ProductImage.jsx'
 import ProductSpecs from '../../components/ProductSpecs/ProductSpecs.jsx'
@@ -14,8 +15,15 @@ function ProductDetailPage() {
   const { state } = useLocation()
   const backTo = state?.from ?? '/'
 
+  const title = {
+    loading: 'Cargando producto',
+    error: 'Producto no disponible',
+    success: product && `${product.brand} ${product.model}`,
+  }[status]
+
   return (
     <article>
+      <PageTitle title={title} />
       <Link className={styles.back} to={backTo}>
         <span aria-hidden="true">← </span>Volver al listado
       </Link>
