@@ -1,5 +1,7 @@
 # Mobile Shop
 
+[![CI](https://github.com/francogrion/nunegal-mobile-shop/actions/workflows/ci.yml/badge.svg)](https://github.com/francogrion/nunegal-mobile-shop/actions/workflows/ci.yml)
+
 Mini aplicación SPA para comprar dispositivos móviles, desarrollada como prueba técnica de front-end.
 
 Consta de dos vistas:
@@ -23,15 +25,16 @@ La aplicación queda disponible en <http://localhost:5173>.
 
 ## Scripts
 
-| Script               | Descripción                                                |
-| -------------------- | ---------------------------------------------------------- |
-| `npm start`          | Arranca el servidor de desarrollo con recarga en caliente. |
-| `npm run build`      | Genera la versión de producción en `dist/`.                |
-| `npm run preview`    | Sirve en local la versión de producción generada.          |
-| `npm test`           | Ejecuta la batería de tests una vez.                       |
-| `npm run test:watch` | Ejecuta los tests en modo observación.                     |
-| `npm run lint`       | Comprueba el código con ESLint y el formato con Prettier.  |
-| `npm run format`     | Formatea el código con Prettier.                           |
+| Script                  | Descripción                                                        |
+| ----------------------- | ------------------------------------------------------------------ |
+| `npm start`             | Arranca el servidor de desarrollo con recarga en caliente.         |
+| `npm run build`         | Genera la versión de producción en `dist/`.                        |
+| `npm run preview`       | Sirve en local la versión de producción generada.                  |
+| `npm test`              | Ejecuta la batería de tests una vez.                               |
+| `npm run test:watch`    | Ejecuta los tests en modo observación.                             |
+| `npm run test:coverage` | Ejecuta los tests y genera el informe de cobertura en `coverage/`. |
+| `npm run lint`          | Comprueba el código con ESLint y el formato con Prettier.          |
+| `npm run format`        | Formatea el código con Prettier.                                   |
 
 ## Stack
 
@@ -56,6 +59,13 @@ Algunas convenciones seguidas en los tests:
 - Se prueba el **comportamiento observable**, no la implementación: los tests de la capa de API simulan la red con MSW en lugar de mockear `fetch`, y cualquier petición no declarada hace fallar el test, de modo que nunca se llama a la API real.
 - Los datos de prueba ([`src/test/fixtures`](src/test/fixtures)) son **respuestas reales de la API**, con sus erratas y rarezas, para que los tests ejerciten los mismos datos que recibe la aplicación.
 - Cada commit deja el proyecto en verde (tests, lint y build).
+- El estado compartido (almacenamiento, peticiones en curso, temporizadores simulados) se reinicia tras cada test, de modo que un test que falla no arrastra a los demás.
+
+### Calidad
+
+- **Integración continua** con GitHub Actions ([`ci.yml`](.github/workflows/ci.yml)): en cada push a `main` y en cada pull request se ejecutan lint, tests con cobertura y build.
+- **Cobertura** cercana al 100 % (`npm run test:coverage`). Los huecos que detectó el informe se cubrieron con tests de comportamiento; al haberse escrito después del código, se comprobó que cada uno falla si se elimina la lógica que protege.
+- **Accesibilidad** verificada desde los tests: se consulta la interfaz por roles y nombres accesibles (como lo haría un lector de pantalla), con regiones de estado para cargas y resultados, alertas para errores, migas de pan con `aria-current` y selectores como grupos de botones de opción.
 
 ## Estructura
 
@@ -111,7 +121,12 @@ Los precios se muestran en euros con formato español (`170 €`); la API no ind
 - **Migas de pan** con la página actual (`Catálogo`, `Catálogo › Acer Iconia Talk S` o `Catálogo › Página no encontrada`). El nombre del producto reutiliza la petición de la página de detalle, sin llamadas extra a la API.
 - **Contador de la cesta** en la parte derecha, visible en todas las vistas. Se guarda en `localStorage`, por lo que se mantiene al recargar, y se sincroniza entre pestañas abiertas; si el navegador bloquea el almacenamiento, sigue funcionando en memoria durante la sesión.
 
-Las rutas desconocidas muestran una página 404 con un enlace de vuelta al catálogo.
+### Detalles transversales
+
+- Cada página tiene su propio **título de documento** (`Acer Iconia Talk S · Mobile Shop`).
+- Si una carga tarda más de 3 segundos, se avisa de que el servidor se está activando y **la primera carga puede tardar hasta un minuto** (arranque en frío de la API).
+- Si la imagen de un producto no carga, se muestra un **marcador de posición** en su lugar.
+- Las rutas desconocidas muestran una página 404 con un enlace de vuelta al catálogo.
 
 ## API
 
@@ -154,4 +169,11 @@ El desarrollo se organiza en hitos incrementales, cada uno reflejado en el histo
 - [x] **3. Listado (PLP)**: enrutado, cuadrícula adaptable de hasta 4 columnas y búsqueda en tiempo real.
 - [x] **4. Detalle (PDP)**: vista en dos columnas con imagen, especificaciones y selectores de opciones.
 - [x] **5. Cesta y cabecera**: añadir a la cesta, contador persistido y breadcrumbs.
-- [ ] **6. Pulido**: accesibilidad, estados de carga y error, y ampliación de tests.
+- [x] **6. Pulido**: CI, cobertura, títulos por página, aviso de arranque en frío, imagen de respaldo y casos límite.
+
+## Posibles mejoras
+
+- **Tests end-to-end** con Playwright contra la API real, como complemento a los tests de integración con MSW.
+- **Página de cesta**: la API solo expone el número de productos, pero la aplicación podría guardar también qué variantes se han añadido.
+- **Muestras de color** en el selector cuando el nombre del color lo permita.
+- **Modo oscuro** a partir de las variables de diseño ya definidas.
