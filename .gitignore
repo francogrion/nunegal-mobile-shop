@@ -25,3 +25,8 @@ dist-ssr
 
 # Test coverage
 coverage
+
+# Playwright
+test-results
+playwright-report
+blob-report

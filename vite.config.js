@@ -7,6 +7,8 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: 'jsdom',
+    // End-to-end specs in e2e/ are run by Playwright, not Vitest
+    include: ['src/**/*.test.{js,jsx}'],
     setupFiles: ['./src/test/setup.js'],
     restoreMocks: true,
     coverage: {
