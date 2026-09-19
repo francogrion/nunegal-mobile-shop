@@ -13,7 +13,12 @@ import {
   normalizeProductDetail,
   normalizeProductSummary,
 } from './normalizers.js'
-import { addToCart, getProduct, getProducts } from './products.js'
+import {
+  addToCart,
+  getProduct,
+  getProducts,
+  resetProductService,
+} from './products.js'
 
 describe('getProducts', () => {
   it('resolves with the normalized product list', async () => {
@@ -134,5 +139,21 @@ describe('client-side cache', () => {
     await expect(getProducts()).rejects.toBeInstanceOf(ApiError)
     await expect(getProducts()).resolves.toHaveLength(rawProductList.length)
     expect(endpoint).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('resetProductService', () => {
+  it('forgets requests still in flight, so a hanging one is not reused', async () => {
+    server.use(
+      http.get(`${API_BASE_URL}/api/product`, () => new Promise(() => {}), {
+        once: true,
+      }),
+    )
+    getProducts()
+
+    resetProductService()
+    mockProductListEndpoint()
+
+    await expect(getProducts()).resolves.toHaveLength(rawProductList.length)
   })
 })

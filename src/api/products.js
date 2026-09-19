@@ -23,10 +23,21 @@ function fetchCached(path) {
         cache.set(path, data)
         return data
       })
-      .finally(() => pendingRequests.delete(path))
+      .finally(() => {
+        // Only forget this request, not a newer one made after a reset
+        if (pendingRequests.get(path) === request) pendingRequests.delete(path)
+      })
     pendingRequests.set(path, request)
   }
   return pendingRequests.get(path)
+}
+
+/**
+ * Forgets the requests in flight. Meant for tests, where every test must
+ * start from a clean state even if a previous one left a request hanging.
+ */
+export function resetProductService() {
+  pendingRequests.clear()
 }
 
 export async function getProducts() {
