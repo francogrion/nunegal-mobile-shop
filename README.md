@@ -67,9 +67,10 @@ src/
 │   ├── httpClient.js   Cliente HTTP (fetch + errores tipados ApiError)
 │   ├── normalizers.js  Adaptadores de la respuesta de la API al modelo de la app
 │   └── products.js     Servicio de productos y cesta (con caché)
-├── components/       Componentes reutilizables (Header, Layout, ProductCard, SearchBar)
-├── hooks/            Hooks de datos (useProducts)
-├── pages/            Una carpeta por ruta (ProductListPage, NotFoundPage)
+├── components/       Componentes reutilizables (Header, Layout, ProductCard, SearchBar,
+│                     ProductSpecs, ProductActions, OptionSelector)
+├── hooks/            Hooks de datos (useResource y sus envoltorios useProducts / useProduct)
+├── pages/            Una carpeta por ruta (ProductListPage, ProductDetailPage, NotFoundPage)
 ├── styles/           Estilos globales y variables de diseño
 ├── test/             Configuración de tests, helpers, servidor MSW y fixtures
 ├── utils/            Funciones puras (formato de precio, filtrado de productos)
@@ -91,6 +92,14 @@ Los tests conviven junto al código que prueban (`*.test.js` / `*.test.jsx`).
 - Si la API falla, se muestra un aviso con un botón para reintentar.
 
 Los precios se muestran en euros con formato español (`170 €`); la API no indica la moneda, así que se asume euro.
+
+### Detalle de producto (`/product/:id`)
+
+- Vista en **dos columnas**: la imagen a la izquierda y los detalles y acciones a la derecha (en móvil se apilan).
+- Tabla de **especificaciones** con marca, modelo, precio, CPU, RAM, sistema operativo, resolución y tamaño de pantalla, batería, cámaras principal y frontal, dimensiones y peso. Los datos que la API no proporciona se muestran como _No disponible_.
+- **Selectores de almacenamiento y color** como grupos de botones de opción accesibles. Si solo hay una opción, se muestra igualmente y viene seleccionada; si hay varias, ninguna se preselecciona para que el usuario elija de forma explícita.
+- El enlace **Volver al listado** regresa al listado del que venía el usuario, conservando su búsqueda; si se abrió el detalle directamente, lleva al listado completo.
+- Estados de carga y de error con opción de reintento.
 
 Las rutas desconocidas muestran una página 404 con un enlace de vuelta al catálogo.
 
@@ -123,7 +132,8 @@ Antes de empezar a desarrollar se analizaron las respuestas reales de la API. Es
 - **Precios vacíos**: el precio llega como texto y algunos productos lo tienen vacío (`""`). Se convierte a número, o a `null` cuando no hay precio, y estos productos se muestran como _Precio no disponible_.
 - **Nombres de campo con erratas** (`dimentions`, `secondaryCmera`) y **campos intercambiados** (`displayResolution` contiene el tamaño en pulgadas y `displaySize` la resolución en píxeles). La respuesta se normaliza en la capa de API ([`normalizers.js`](src/api/normalizers.js)), de forma que los componentes trabajan con un modelo limpio.
 - **Tipos no homogéneos**: campos como `primaryCamera` llegan unas veces como array y otras como texto; se normalizan siempre a array.
-- **Unidades implícitas**: el peso llega como texto sin unidad (`"260"`); se convierte a número y se mostrará en gramos.
+- **Unidades implícitas**: el peso llega como texto sin unidad (`"260"`); se convierte a número y se muestra en gramos.
+- **Productos inexistentes**: pedir un id que no existe devuelve un error `500` genérico en lugar de un `404`, por lo que la aplicación no puede distinguirlo de un fallo del servidor y muestra un único estado de error con opción de reintentar y de volver al listado.
 
 ## Hitos
 
@@ -132,6 +142,6 @@ El desarrollo se organiza en hitos incrementales, cada uno reflejado en el histo
 - [x] **1. Proyecto base**: Vite + React, tests, lint, formato y README.
 - [x] **2. Capa de API y caché**: cliente HTTP, normalización de datos y caché en cliente con expiración de 1 hora.
 - [x] **3. Listado (PLP)**: enrutado, cuadrícula adaptable de hasta 4 columnas y búsqueda en tiempo real.
-- [ ] **4. Detalle (PDP)**: vista en dos columnas con imagen, especificaciones y selectores de opciones.
+- [x] **4. Detalle (PDP)**: vista en dos columnas con imagen, especificaciones y selectores de opciones.
 - [ ] **5. Cesta y cabecera**: añadir a la cesta, contador persistido y breadcrumbs.
 - [ ] **6. Pulido**: accesibilidad, estados de carga y error, y ampliación de tests.
