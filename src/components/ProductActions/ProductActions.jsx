@@ -1,5 +1,7 @@
+import { IconShoppingBagPlus } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useAddToCart } from '../../hooks/useAddToCart.js'
+import { toSwatchColor } from '../../utils/toSwatchColor.js'
 import OptionSelector from '../OptionSelector/OptionSelector.jsx'
 import styles from './ProductActions.module.css'
 
@@ -14,6 +16,10 @@ function ProductActions({ product }) {
 
   const isComplete = storageCode !== null && colorCode !== null
   const isAdding = status === 'adding'
+  const colorOptions = colors.map((color) => ({
+    ...color,
+    swatch: toSwatchColor(color.name),
+  }))
 
   const handleAdd = () => {
     add({ id: product.id, colorCode, storageCode })
@@ -40,7 +46,7 @@ function ProductActions({ product }) {
       />
       <OptionSelector
         label="Color"
-        options={colors}
+        options={colorOptions}
         selectedCode={colorCode}
         onSelect={selectColor}
       />
@@ -51,6 +57,7 @@ function ProductActions({ product }) {
         disabled={!isComplete || isAdding}
         onClick={handleAdd}
       >
+        <IconShoppingBagPlus size={20} stroke={1.8} aria-hidden="true" />
         {isAdding ? 'Añadiendo…' : 'Añadir a la cesta'}
       </button>
 

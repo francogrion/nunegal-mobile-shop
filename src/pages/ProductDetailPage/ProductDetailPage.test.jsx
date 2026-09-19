@@ -176,6 +176,40 @@ describe('ProductDetailPage specifications', () => {
       expect(await findSpecValue(label)).toHaveTextContent('No disponible')
     },
   )
+
+  it('highlights the key figures of the product', async () => {
+    mockProductDetailEndpoint()
+    renderApp({ route: PRODUCT_ROUTE })
+
+    const highlights = await screen.findByRole('list', {
+      name: 'Especificaciones destacadas',
+    })
+    const items = within(highlights).getAllByRole('listitem')
+
+    expect(items.map((item) => item.textContent)).toEqual([
+      '7.0″ Pantalla',
+      '3400 mAh Batería',
+      '13 MP Cámara',
+      '2 GB RAM',
+    ])
+  })
+
+  it('shows no highlights when none of the key figures can be read', async () => {
+    mockProductDetailEndpoint({
+      ...rawProductDetail,
+      displayResolution: '',
+      battery: '',
+      primaryCamera: '',
+      ram: '',
+    })
+    renderApp({ route: PRODUCT_ROUTE })
+
+    await findProductHeading()
+
+    expect(
+      screen.queryByRole('list', { name: 'Especificaciones destacadas' }),
+    ).not.toBeInTheDocument()
+  })
 })
 
 describe('ProductDetailPage options', () => {
