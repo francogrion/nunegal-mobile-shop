@@ -1,0 +1,27 @@
+.breadcrumbs {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Decorative separator, hidden from screen readers via the alt text syntax */
+.item + .item::before {
+  content: '›' / '';
+  margin-right: var(--space-1);
+}
+
+.item a {
+  color: inherit;
+}
+
+.item [aria-current='page'] {
+  color: var(--color-text);
+}

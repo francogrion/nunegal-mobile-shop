@@ -1,7 +1,10 @@
 import { screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { CART_STORAGE_KEY } from './store/cartStore.js'
-import { mockProductListEndpoint } from './test/apiMocks.js'
+import {
+  mockProductDetailEndpoint,
+  mockProductListEndpoint,
+} from './test/apiMocks.js'
 import { renderApp } from './test/renderApp.jsx'
 
 describe('App', () => {
@@ -59,5 +62,47 @@ describe('App header cart', () => {
     expect(
       within(screen.getByRole('banner')).getByText('3 productos en la cesta'),
     ).toBeInTheDocument()
+  })
+})
+
+describe('App breadcrumbs', () => {
+  const getBreadcrumbs = () =>
+    within(screen.getByRole('navigation', { name: 'Migas de pan' }))
+
+  it('shows the catalog as the current page on the home page', () => {
+    mockProductListEndpoint()
+    renderApp({ route: '/' })
+
+    expect(getBreadcrumbs().getByText('Catálogo')).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+    expect(getBreadcrumbs().queryByRole('link')).not.toBeInTheDocument()
+  })
+
+  it('shows the product as the current page and links to the catalog on the details page', async () => {
+    const endpoint = mockProductDetailEndpoint()
+    renderApp({ route: '/product/ZmGrkLRPXOTpxsU4jjAcv' })
+
+    expect(
+      getBreadcrumbs().getByRole('link', { name: 'Catálogo' }),
+    ).toHaveAttribute('href', '/')
+    expect(
+      await getBreadcrumbs().findByText('Acer Iconia Talk S'),
+    ).toHaveAttribute('aria-current', 'page')
+    // The page and the breadcrumbs share a single request
+    expect(endpoint).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows the not found page as the current page for unknown routes', () => {
+    renderApp({ route: '/does-not-exist' })
+
+    expect(
+      getBreadcrumbs().getByRole('link', { name: 'Catálogo' }),
+    ).toHaveAttribute('href', '/')
+    expect(getBreadcrumbs().getByText('Página no encontrada')).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
   })
 })

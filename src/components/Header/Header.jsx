@@ -1,5 +1,6 @@
 import { Link } from 'react-router'
 import { useCartCount } from '../../hooks/useCartCount.js'
+import Breadcrumbs from '../Breadcrumbs/Breadcrumbs.jsx'
 import styles from './Header.module.css'
 
 const describeCart = (count) =>
@@ -35,6 +36,9 @@ function Header() {
       <Link className={styles.brand} to="/">
         Mobile Shop
       </Link>
+      <div className={styles.breadcrumbs}>
+        <Breadcrumbs />
+      </div>
       <p className={styles.cart}>
         <CartIcon />
         {/* The visible number is hidden from screen readers, which read the
