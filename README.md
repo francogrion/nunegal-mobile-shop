@@ -161,7 +161,10 @@ Los precios se muestran en euros con formato español (`170 €`); la API no ind
 - **Cesta** en la parte derecha, con el número de productos visible en todas las vistas. Al pulsarla se despliega un panel con:
   - cada producto con su foto, variante (almacenamiento y color), cantidad y precio; las repeticiones de la misma variante se agrupan en una línea;
   - el **total** (los productos sin precio no suman y se indica cuántos quedan fuera);
-  - botones para **eliminar** un producto o **vaciar la cesta**, anunciados a los lectores de pantalla.
+  - botones **− / +** para restar o sumar unidades de cada producto (sumar pasa por la API, como cualquier otra adición; restar la última unidad elimina el producto);
+  - botones para **eliminar** un producto o **vaciar la cesta**.
+
+  Cada cambio se anuncia a los lectores de pantalla.
 
   El panel sigue el patrón de divulgación accesible (botón con `aria-expanded`), se cierra con Escape (devolviendo el foco al botón), al hacer clic fuera o al abrir un producto desde él, y en móvil ocupa el ancho de la cabecera.
 
@@ -200,7 +203,7 @@ Las respuestas de `GET /api/product` y `GET /api/product/:id` se guardan en `loc
 Antes de empezar a desarrollar se analizaron las respuestas reales de la API. Estas son las particularidades encontradas y cómo se tratan en la aplicación:
 
 - **`POST /api/cart` siempre devuelve `{ "count": 1 }`**: el servicio no guarda estado entre peticiones, así que usar el valor tal cual dejaría la cesta siempre en 1. Por eso la cesta se gestiona en cliente: cada respuesta suma su `count` a la cantidad de la línea correspondiente y el contenido se persiste en `localStorage`.
-- **Sin consulta ni borrado de la cesta**: la API solo permite añadir productos, así que la lista de la cesta, el total y las acciones de eliminar y vaciar se resuelven en el navegador, sin llamadas a la API.
+- **Sin consulta ni borrado de la cesta**: la API solo permite añadir productos, así que la lista de la cesta, el total y las acciones de restar unidades, eliminar y vaciar se resuelven en el navegador, sin llamadas a la API. Sumar unidades sí usa `POST /api/cart`.
 - **Arranque en frío**: la API está alojada en Render y, tras un tiempo sin uso, la primera petición puede tardar en torno a un minuto. La caché en cliente evita repetir peticiones y comparte las simultáneas; la interfaz muestra estados de carga y de error con opción de reintento.
 - **Precios vacíos**: el precio llega como texto y algunos productos lo tienen vacío (`""`). Se convierte a número, o a `null` cuando no hay precio, y estos productos se muestran como _Precio no disponible_.
 - **Nombres de campo con erratas** (`dimentions`, `secondaryCmera`) y **campos intercambiados** (`displayResolution` contiene el tamaño en pulgadas y `displaySize` la resolución en píxeles). La respuesta se normaliza en la capa de API ([`normalizers.js`](src/api/normalizers.js)), de forma que los componentes trabajan con un modelo limpio.
@@ -221,5 +224,5 @@ El desarrollo se organiza en hitos incrementales, cada uno reflejado en el histo
 
 ## Posibles mejoras
 
-- **Cantidades editables** en la cesta (sumar o restar unidades de una línea) y una página de cesta completa con el proceso de compra.
+- Una **página de cesta** completa con el proceso de compra.
 - **Modo oscuro** a partir de las variables de diseño ya definidas.
