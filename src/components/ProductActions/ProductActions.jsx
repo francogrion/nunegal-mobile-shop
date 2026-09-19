@@ -10,7 +10,7 @@ function ProductActions({ product }) {
   const { colors, storages } = product.options
   const [storageCode, setStorageCode] = useState(() => defaultCode(storages))
   const [colorCode, setColorCode] = useState(() => defaultCode(colors))
-  const { status, add } = useAddToCart()
+  const { status, add, reset } = useAddToCart()
 
   const isComplete = storageCode !== null && colorCode !== null
   const isAdding = status === 'adding'
@@ -19,19 +19,30 @@ function ProductActions({ product }) {
     add({ id: product.id, colorCode, storageCode })
   }
 
+  // A previous confirmation no longer applies to a different selection.
+  const selectStorage = (code) => {
+    setStorageCode(code)
+    reset()
+  }
+
+  const selectColor = (code) => {
+    setColorCode(code)
+    reset()
+  }
+
   return (
     <div className={styles.actions}>
       <OptionSelector
         label="Almacenamiento"
         options={storages}
         selectedCode={storageCode}
-        onSelect={setStorageCode}
+        onSelect={selectStorage}
       />
       <OptionSelector
         label="Color"
         options={colors}
         selectedCode={colorCode}
-        onSelect={setColorCode}
+        onSelect={selectColor}
       />
 
       <button

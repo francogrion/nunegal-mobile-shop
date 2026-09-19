@@ -284,6 +284,20 @@ describe('ProductDetailPage add to cart', () => {
     )
   })
 
+  it('clears the confirmation when the user changes the selected options', async () => {
+    mockProductDetailEndpoint()
+    mockCartEndpoint()
+    const { user } = await renderProductAndChooseStorage()
+    await user.click(getAddButton())
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Producto añadido a la cesta',
+    )
+
+    await user.click(screen.getByRole('radio', { name: '16 GB' }))
+
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
+  })
+
   it('adds up the products in the header count, which stays on every page', async () => {
     mockProductDetailEndpoint()
     mockProductListEndpoint()
