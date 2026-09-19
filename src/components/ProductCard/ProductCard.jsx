@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router'
 import { productPath } from '../../routes.js'
 import { formatPrice } from '../../utils/formatPrice.js'
+import ProductImage from '../ProductImage/ProductImage.jsx'
 import styles from './ProductCard.module.css'
 
 function ProductCard({ product }) {
@@ -16,7 +17,7 @@ function ProductCard({ product }) {
       state={{ from: location }}
     >
       {/* Decorative: brand and model are already announced as text */}
-      <img className={styles.image} src={imageUrl} alt="" loading="lazy" />
+      <ProductImage className={styles.image} src={imageUrl} alt="" />
       <div className={styles.info}>
         <p className={styles.brand}>{brand}</p>
         <h2 className={styles.model}>{model}</h2>

@@ -1,5 +1,6 @@
 import { Link, useLocation, useParams } from 'react-router'
 import ProductActions from '../../components/ProductActions/ProductActions.jsx'
+import ProductImage from '../../components/ProductImage/ProductImage.jsx'
 import ProductSpecs from '../../components/ProductSpecs/ProductSpecs.jsx'
 import { useProduct } from '../../hooks/useProduct.js'
 import { formatPrice } from '../../utils/formatPrice.js'
@@ -36,10 +37,11 @@ function ProductDetailPage() {
 
       {status === 'success' && (
         <div className={styles.layout}>
-          <img
+          <ProductImage
             className={styles.image}
             src={product.imageUrl}
             alt={`${product.brand} ${product.model}`}
+            loading="eager"
           />
           <div className={styles.details}>
             <h1 className={styles.title}>

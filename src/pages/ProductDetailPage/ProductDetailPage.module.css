@@ -46,6 +46,7 @@
 
 .image {
   width: 100%;
+  aspect-ratio: 1;
   max-height: 32rem;
   padding: var(--space-6);
   object-fit: contain;
