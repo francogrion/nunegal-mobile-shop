@@ -13,6 +13,10 @@ const PRODUCT_ROUTE = `/product/${PRODUCT_ID}`
 const findProductHeading = () =>
   screen.findByRole('heading', { level: 1, name: 'Acer Iconia Talk S' })
 
+const findOptionGroup = (name) => screen.findByRole('group', { name })
+
+const withOptions = (options) => ({ ...rawProductDetail, options })
+
 const findSpecValue = async (label) => {
   const table = await screen.findByRole('table', { name: 'Especificaciones' })
   const rowHeader = within(table).getByRole('rowheader', { name: label })
@@ -126,4 +130,76 @@ describe('ProductDetailPage specifications', () => {
       expect(await findSpecValue(label)).toHaveTextContent('No disponible')
     },
   )
+})
+
+describe('ProductDetailPage options', () => {
+  it('shows every storage option without preselecting any when there are several', async () => {
+    mockProductDetailEndpoint()
+    renderApp({ route: PRODUCT_ROUTE })
+
+    const storage = await findOptionGroup('Almacenamiento')
+
+    expect(
+      within(storage).getByRole('radio', { name: '16 GB' }),
+    ).not.toBeChecked()
+    expect(
+      within(storage).getByRole('radio', { name: '32 GB' }),
+    ).not.toBeChecked()
+  })
+
+  it('shows every color option without preselecting any when there are several', async () => {
+    mockProductDetailEndpoint(
+      withOptions({
+        colors: [
+          { code: 1000, name: 'Black' },
+          { code: 1001, name: 'White' },
+        ],
+        storages: [{ code: 2000, name: '16 GB' }],
+      }),
+    )
+    renderApp({ route: PRODUCT_ROUTE })
+
+    const colors = await findOptionGroup('Color')
+
+    expect(
+      within(colors).getByRole('radio', { name: 'Black' }),
+    ).not.toBeChecked()
+    expect(
+      within(colors).getByRole('radio', { name: 'White' }),
+    ).not.toBeChecked()
+  })
+
+  it.each([
+    ['Color', 'Black'],
+    ['Almacenamiento', '16 GB'],
+  ])(
+    'preselects the %s option when it is the only one available',
+    async (group, option) => {
+      mockProductDetailEndpoint(
+        withOptions({
+          colors: [{ code: 1000, name: 'Black' }],
+          storages: [{ code: 2000, name: '16 GB' }],
+        }),
+      )
+      renderApp({ route: PRODUCT_ROUTE })
+
+      const options = await findOptionGroup(group)
+
+      expect(within(options).getByRole('radio', { name: option })).toBeChecked()
+    },
+  )
+
+  it('lets the user choose and change the selected options', async () => {
+    mockProductDetailEndpoint()
+    const { user } = renderApp({ route: PRODUCT_ROUTE })
+    const storage = await findOptionGroup('Almacenamiento')
+
+    await user.click(within(storage).getByRole('radio', { name: '16 GB' }))
+    await user.click(within(storage).getByRole('radio', { name: '32 GB' }))
+
+    expect(within(storage).getByRole('radio', { name: '32 GB' })).toBeChecked()
+    expect(
+      within(storage).getByRole('radio', { name: '16 GB' }),
+    ).not.toBeChecked()
+  })
 })

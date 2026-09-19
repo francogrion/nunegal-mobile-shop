@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router'
+import ProductActions from '../../components/ProductActions/ProductActions.jsx'
 import ProductSpecs from '../../components/ProductSpecs/ProductSpecs.jsx'
 import { useProduct } from '../../hooks/useProduct.js'
 import { formatPrice } from '../../utils/formatPrice.js'
@@ -42,6 +43,7 @@ function ProductDetailPage() {
             </h1>
             <p className={styles.price}>{formatPrice(product.price)}</p>
             <ProductSpecs product={product} />
+            <ProductActions key={product.id} product={product} />
           </div>
         </div>
       )}
