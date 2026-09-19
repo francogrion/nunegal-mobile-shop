@@ -1,6 +1,7 @@
 # Mobile Shop
 
 [![CI](https://github.com/francogrion/nunegal-mobile-shop/actions/workflows/ci.yml/badge.svg)](https://github.com/francogrion/nunegal-mobile-shop/actions/workflows/ci.yml)
+[![E2E](https://github.com/francogrion/nunegal-mobile-shop/actions/workflows/e2e.yml/badge.svg)](https://github.com/francogrion/nunegal-mobile-shop/actions/workflows/e2e.yml)
 
 Mini aplicación SPA para comprar dispositivos móviles, desarrollada como prueba técnica de front-end.
 
@@ -25,16 +26,17 @@ La aplicación queda disponible en <http://localhost:5173>.
 
 ## Scripts
 
-| Script                  | Descripción                                                        |
-| ----------------------- | ------------------------------------------------------------------ |
-| `npm start`             | Arranca el servidor de desarrollo con recarga en caliente.         |
-| `npm run build`         | Genera la versión de producción en `dist/`.                        |
-| `npm run preview`       | Sirve en local la versión de producción generada.                  |
-| `npm test`              | Ejecuta la batería de tests una vez.                               |
-| `npm run test:watch`    | Ejecuta los tests en modo observación.                             |
-| `npm run test:coverage` | Ejecuta los tests y genera el informe de cobertura en `coverage/`. |
-| `npm run lint`          | Comprueba el código con ESLint y el formato con Prettier.          |
-| `npm run format`        | Formatea el código con Prettier.                                   |
+| Script                  | Descripción                                                                              |
+| ----------------------- | ---------------------------------------------------------------------------------------- |
+| `npm start`             | Arranca el servidor de desarrollo con recarga en caliente.                               |
+| `npm run build`         | Genera la versión de producción en `dist/`.                                              |
+| `npm run preview`       | Sirve en local la versión de producción generada.                                        |
+| `npm test`              | Ejecuta la batería de tests una vez.                                                     |
+| `npm run test:watch`    | Ejecuta los tests en modo observación.                                                   |
+| `npm run test:coverage` | Ejecuta los tests y genera el informe de cobertura en `coverage/`.                       |
+| `npm run test:e2e`      | Ejecuta los tests end-to-end con Playwright (ver [Tests end-to-end](#tests-end-to-end)). |
+| `npm run lint`          | Comprueba el código con ESLint y el formato con Prettier.                                |
+| `npm run format`        | Formatea el código con Prettier.                                                         |
 
 ## Stack
 
@@ -42,6 +44,7 @@ La aplicación queda disponible en <http://localhost:5173>.
 - **[React Router 8](https://reactrouter.com/)** en modo declarativo para el enrutado en cliente.
 - **CSS Modules** para los estilos de cada componente, sobre unas variables de diseño globales (colores, espaciados).
 - **[Vitest](https://vitest.dev/)** + **[Testing Library](https://testing-library.com/)** (sobre jsdom) para los tests, y **[MSW](https://mswjs.io/)** para simular la API a nivel de red.
+- **[Playwright](https://playwright.dev/)** + **[axe](https://github.com/dequelabs/axe-core-npm)** para los tests end-to-end y la auditoría automática de accesibilidad.
 - **[ESLint](https://eslint.org/)** (reglas recomendadas, reglas de hooks de React y de Fast Refresh) y **[Prettier](https://prettier.io/)** para la calidad y el formato del código.
 
 El proyecto se generó a partir de la plantilla oficial `create-vite` (`react`), sustituyendo el linter de la plantilla por ESLint + Prettier y añadiendo la configuración de tests.
@@ -65,11 +68,30 @@ Algunas convenciones seguidas en los tests:
 
 - **Integración continua** con GitHub Actions ([`ci.yml`](.github/workflows/ci.yml)): en cada push a `main` y en cada pull request se ejecutan lint, tests con cobertura y build.
 - **Cobertura** cercana al 100 % (`npm run test:coverage`). Los huecos que detectó el informe se cubrieron con tests de comportamiento; al haberse escrito después del código, se comprobó que cada uno falla si se elimina la lógica que protege.
-- **Accesibilidad** verificada desde los tests: se consulta la interfaz por roles y nombres accesibles (como lo haría un lector de pantalla), con regiones de estado para cargas y resultados, alertas para errores, migas de pan con `aria-current` y selectores como grupos de botones de opción.
+- **Accesibilidad** verificada desde los tests: se consulta la interfaz por roles y nombres accesibles (como lo haría un lector de pantalla), con regiones de estado para cargas y resultados, alertas para errores, migas de pan con `aria-current` y selectores como grupos de botones de opción. Además, los tests end-to-end auditan cada página con axe (WCAG 2.1 AA).
+
+### Tests end-to-end
+
+Los tests de [`e2e/`](e2e) recorren la aplicación como lo haría un usuario, con Playwright, contra el **build de producción** (`vite preview`) y la **API real**. Complementan a los tests de integración con MSW: estos detectan, por ejemplo, cambios en el contrato de la API o problemas que solo aparecen en un navegador real.
+
+- Se ejecutan en Chromium con dos perfiles: **escritorio** y **móvil** (Pixel 7), lo que también verifica la cuadrícula de 4 columnas y 1 columna respectivamente.
+- Cubren listado y búsqueda, caché (una recarga no vuelve a llamar a la API), detalle, cesta (el contador sobrevive a recargas y cambios de página), navegación, página 404 y la auditoría de accesibilidad.
+- Antes de empezar, una configuración global [despierta la API](e2e/global-setup.js), que puede tardar un minuto en responder tras un tiempo sin uso. En CI se reintentan los fallos transitorios y se guarda el informe de Playwright con trazas.
+- Se ejecutan en un workflow propio ([`e2e.yml`](.github/workflows/e2e.yml)), para que una caída de la API externa no oculte el estado de los checks del código.
+
+La primera vez hay que descargar el navegador:
+
+```bash
+npx playwright install chromium
+npm run test:e2e
+```
+
+Estos tests ya encontraron un error que los de jsdom no podían ver: al escribir rápido en el buscador se perdían caracteres. El buscador toma su valor de la URL y React Router aplicaba los cambios de URL como _transiciones_ de React, que pueden retrasarse; en jsdom, `act()` las resuelve al instante. Se corrigió desactivando las transiciones del router, que la aplicación no necesita.
 
 ## Estructura
 
 ```text
+e2e/                  Tests end-to-end con Playwright (API real)
 src/
 ├── api/              Capa de acceso a datos
 │   ├── cache.js        Caché clave-valor en localStorage con expiración
@@ -173,7 +195,6 @@ El desarrollo se organiza en hitos incrementales, cada uno reflejado en el histo
 
 ## Posibles mejoras
 
-- **Tests end-to-end** con Playwright contra la API real, como complemento a los tests de integración con MSW.
 - **Página de cesta**: la API solo expone el número de productos, pero la aplicación podría guardar también qué variantes se han añadido.
 - **Muestras de color** en el selector cuando el nombre del color lo permita.
 - **Modo oscuro** a partir de las variables de diseño ya definidas.
