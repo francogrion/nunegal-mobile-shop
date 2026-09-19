@@ -382,4 +382,39 @@ describe('ProductDetailPage add to cart', () => {
     expect(getHeader().getByText('0 productos en la cesta')).toBeInTheDocument()
     expect(getAddButton()).toBeEnabled()
   })
+
+  it('sends the color chosen by the user when there are several', async () => {
+    mockProductDetailEndpoint(
+      withOptions({
+        colors: [
+          { code: 1000, name: 'Black' },
+          { code: 1001, name: 'White' },
+        ],
+        storages: [{ code: 2000, name: '16 GB' }],
+      }),
+    )
+    const cart = mockCartEndpoint()
+    const { user } = renderApp({ route: PRODUCT_ROUTE })
+    const colors = await findOptionGroup('Color')
+
+    await user.click(within(colors).getByRole('radio', { name: 'White' }))
+    await user.click(getAddButton())
+
+    await waitFor(() => expect(cart).toHaveBeenCalledTimes(1))
+    const [{ request }] = cart.mock.calls[0]
+    await expect(request.json()).resolves.toMatchObject({ colorCode: 1001 })
+  })
+
+  it('keeps the button disabled if the options change while adding', async () => {
+    mockProductDetailEndpoint()
+    server.use(
+      http.post(`${API_BASE_URL}/api/cart`, () => new Promise(() => {})),
+    )
+    const { user } = await renderProductAndChooseStorage()
+
+    await user.click(getAddButton())
+    await user.click(screen.getByRole('radio', { name: '16 GB' }))
+
+    expect(screen.getByRole('button', { name: 'Añadiendo…' })).toBeDisabled()
+  })
 })

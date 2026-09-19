@@ -192,4 +192,15 @@ describe('ProductListPage search', () => {
     expect(getSearchBox()).toHaveValue('jade')
     expect(getVisibleModels()).toEqual(['Liquid Jade 2'])
   })
+
+  it('shows every product again and cleans the URL when the search is cleared', async () => {
+    mockProductListEndpoint()
+    const { user, getLocation } = renderApp({ route: '/?search=jade' })
+    await findProductList()
+
+    await user.clear(getSearchBox())
+
+    expect(getVisibleModels()).toHaveLength(rawProductList.length)
+    expect(getLocation().search).toBe('')
+  })
 })

@@ -80,4 +80,18 @@ describe('createCartStore', () => {
     expect(listener).toHaveBeenCalled()
     expect(store.getCount()).toBe(5)
   })
+
+  it('empties the cart when another tab clears the storage', () => {
+    const store = createCartStore({ key: KEY })
+    store.add(3)
+    const listener = vi.fn()
+    store.subscribe(listener)
+
+    // Clearing the whole storage fires a `storage` event with a null key
+    localStorage.clear()
+    window.dispatchEvent(new StorageEvent('storage', { key: null }))
+
+    expect(listener).toHaveBeenCalled()
+    expect(store.getCount()).toBe(0)
+  })
 })
