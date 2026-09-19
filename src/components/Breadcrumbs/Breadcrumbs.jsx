@@ -1,5 +1,6 @@
 import { Link, matchPath, useLocation } from 'react-router'
 import { useProduct } from '../../hooks/useProduct.js'
+import { PRODUCT_PATH } from '../../routes.js'
 import styles from './Breadcrumbs.module.css'
 
 // Shares the request (and the cache) with the details page, so showing the
@@ -10,7 +11,7 @@ function ProductName({ productId }) {
 }
 
 function CurrentPage({ pathname }) {
-  const productMatch = matchPath('/product/:productId', pathname)
+  const productMatch = matchPath(PRODUCT_PATH, pathname)
   if (productMatch) {
     return <ProductName productId={productMatch.params.productId} />
   }

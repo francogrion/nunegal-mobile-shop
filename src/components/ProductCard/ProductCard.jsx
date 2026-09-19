@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router'
+import { productPath } from '../../routes.js'
 import { formatPrice } from '../../utils/formatPrice.js'
 import styles from './ProductCard.module.css'
 
@@ -11,7 +12,7 @@ function ProductCard({ product }) {
   return (
     <Link
       className={styles.card}
-      to={`/product/${id}`}
+      to={productPath(id)}
       state={{ from: location }}
     >
       {/* Decorative: brand and model are already announced as text */}
