@@ -17,7 +17,7 @@ export function renderApp({ route = '/' } = {}) {
 
   const user = userEvent.setup()
   render(
-    <MemoryRouter initialEntries={[route]}>
+    <MemoryRouter initialEntries={[route]} useTransitions={false}>
       <App />
       <LocationSpy />
     </MemoryRouter>,

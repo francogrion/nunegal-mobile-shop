@@ -6,7 +6,10 @@ import './styles/global.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
+    {/* Location updates must be urgent, not transitions: the search box reads
+        its value from the URL, and deferred updates made it drop characters
+        when typing fast. The app does not rely on Suspense transitions. */}
+    <BrowserRouter useTransitions={false}>
       <App />
     </BrowserRouter>
   </StrictMode>,
