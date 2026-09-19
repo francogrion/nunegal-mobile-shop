@@ -100,5 +100,28 @@ describe('createCache', () => {
       expect(() => cache.set('products', [{ id: 'a1' }])).not.toThrow()
       expect(cache.get('products')).toBeNull()
     })
+
+    describe('when the browser blocks access to localStorage', () => {
+      beforeEach(() => {
+        // e.g. Safari with cookies blocked throws on property access
+        vi.spyOn(globalThis, 'localStorage', 'get').mockImplementation(() => {
+          throw new DOMException('Access denied', 'SecurityError')
+        })
+      })
+
+      afterEach(() => {
+        vi.restoreAllMocks()
+      })
+
+      it('keeps working without cache', () => {
+        const createDefaultCache = () =>
+          createCache({ namespace: 'test', ttl: ONE_HOUR })
+
+        expect(createDefaultCache).not.toThrow()
+        const cache = createDefaultCache()
+        expect(() => cache.set('products', [{ id: 'a1' }])).not.toThrow()
+        expect(cache.get('products')).toBeNull()
+      })
+    })
   })
 })
