@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useAddToCart } from '../../hooks/useAddToCart.js'
 import OptionSelector from '../OptionSelector/OptionSelector.jsx'
 import styles from './ProductActions.module.css'
 
@@ -9,6 +10,14 @@ function ProductActions({ product }) {
   const { colors, storages } = product.options
   const [storageCode, setStorageCode] = useState(() => defaultCode(storages))
   const [colorCode, setColorCode] = useState(() => defaultCode(colors))
+  const { status, add } = useAddToCart()
+
+  const isComplete = storageCode !== null && colorCode !== null
+  const isAdding = status === 'adding'
+
+  const handleAdd = () => {
+    add({ id: product.id, colorCode, storageCode })
+  }
 
   return (
     <div className={styles.actions}>
@@ -24,6 +33,31 @@ function ProductActions({ product }) {
         selectedCode={colorCode}
         onSelect={setColorCode}
       />
+
+      <button
+        type="button"
+        className={styles.addButton}
+        disabled={!isComplete || isAdding}
+        onClick={handleAdd}
+      >
+        {isAdding ? 'Añadiendo…' : 'Añadir a la cesta'}
+      </button>
+
+      <div className={styles.messages}>
+        {!isComplete && (
+          <p className={styles.hint}>
+            Elige almacenamiento y color para añadirlo a la cesta.
+          </p>
+        )}
+        <p role="status">
+          {status === 'added' && 'Producto añadido a la cesta.'}
+        </p>
+        {status === 'error' && (
+          <p role="alert" className={styles.error}>
+            No se ha podido añadir el producto a la cesta. Inténtalo de nuevo.
+          </p>
+        )}
+      </div>
     </div>
   )
 }

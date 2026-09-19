@@ -6,3 +6,39 @@
   border-radius: var(--radius);
   background: var(--color-surface);
 }
+
+.addButton {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--color-accent);
+  color: var(--color-bg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.addButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Messages share one grid cell so an empty live region takes no room while
+   staying in the accessibility tree (hiding it could silence announcements). */
+.messages {
+  display: grid;
+  gap: var(--space-1);
+  font-size: 0.875rem;
+}
+
+.messages p {
+  margin: 0;
+}
+
+.hint {
+  color: var(--color-text-muted);
+}
+
+.error {
+  color: var(--color-danger);
+}

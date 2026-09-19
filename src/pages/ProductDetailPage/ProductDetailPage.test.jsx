@@ -1,8 +1,9 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { API_BASE_URL } from '../../api/config.js'
 import {
+  mockCartEndpoint,
   mockProductDetailEndpoint,
   mockProductListEndpoint,
 } from '../../test/apiMocks.js'
@@ -221,5 +222,125 @@ describe('ProductDetailPage options', () => {
     expect(
       within(storage).getByRole('radio', { name: '16 GB' }),
     ).not.toBeChecked()
+  })
+})
+
+describe('ProductDetailPage add to cart', () => {
+  const getAddButton = () =>
+    screen.getByRole('button', { name: 'Añadir a la cesta' })
+
+  const getHeader = () => within(screen.getByRole('banner'))
+
+  // The fixture has a single color (preselected) and two storage options.
+  const renderProductAndChooseStorage = async () => {
+    const view = renderApp({ route: PRODUCT_ROUTE })
+    const storage = await findOptionGroup('Almacenamiento')
+    await view.user.click(within(storage).getByRole('radio', { name: '32 GB' }))
+    return view
+  }
+
+  it('lets the user add the product only once every option is selected', async () => {
+    mockProductDetailEndpoint()
+    const { user } = renderApp({ route: PRODUCT_ROUTE })
+    const storage = await findOptionGroup('Almacenamiento')
+
+    expect(getAddButton()).toBeDisabled()
+    expect(
+      screen.getByText(
+        'Elige almacenamiento y color para añadirlo a la cesta.',
+      ),
+    ).toBeInTheDocument()
+
+    await user.click(within(storage).getByRole('radio', { name: '32 GB' }))
+
+    expect(getAddButton()).toBeEnabled()
+  })
+
+  it('sends the product and the selected options to the cart', async () => {
+    mockProductDetailEndpoint()
+    const cart = mockCartEndpoint()
+    const { user } = await renderProductAndChooseStorage()
+
+    await user.click(getAddButton())
+
+    await waitFor(() => expect(cart).toHaveBeenCalledTimes(1))
+    const [{ request }] = cart.mock.calls[0]
+    await expect(request.json()).resolves.toEqual({
+      id: PRODUCT_ID,
+      colorCode: 1000,
+      storageCode: 2001,
+    })
+  })
+
+  it('confirms that the product was added', async () => {
+    mockProductDetailEndpoint()
+    mockCartEndpoint()
+    const { user } = await renderProductAndChooseStorage()
+
+    await user.click(getAddButton())
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Producto añadido a la cesta',
+    )
+  })
+
+  it('adds up the products in the header count, which stays on every page', async () => {
+    mockProductDetailEndpoint()
+    mockProductListEndpoint()
+    mockCartEndpoint({ count: 1 })
+    const { user } = await renderProductAndChooseStorage()
+
+    await user.click(getAddButton())
+    expect(
+      await getHeader().findByText('1 producto en la cesta'),
+    ).toBeInTheDocument()
+
+    await user.click(getAddButton())
+    expect(
+      await getHeader().findByText('2 productos en la cesta'),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('link', { name: 'Volver al listado' }))
+    await screen.findByRole('list', { name: 'Productos' })
+    expect(getHeader().getByText('2 productos en la cesta')).toBeInTheDocument()
+  })
+
+  it('prevents adding the product twice while the request is in progress', async () => {
+    mockProductDetailEndpoint()
+    const response = Promise.withResolvers()
+    server.use(
+      http.post(`${API_BASE_URL}/api/cart`, async () => {
+        await response.promise
+        return HttpResponse.json({ count: 1 })
+      }),
+    )
+    const { user } = await renderProductAndChooseStorage()
+
+    await user.click(getAddButton())
+
+    expect(screen.getByRole('button', { name: 'Añadiendo…' })).toBeDisabled()
+    response.resolve()
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Producto añadido a la cesta',
+    )
+  })
+
+  it('shows an error and keeps the count when the product cannot be added', async () => {
+    mockProductDetailEndpoint()
+    server.use(
+      http.post(
+        `${API_BASE_URL}/api/cart`,
+        () => new HttpResponse(null, { status: 500 }),
+      ),
+    )
+    const { user } = await renderProductAndChooseStorage()
+
+    await user.click(getAddButton())
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No se ha podido añadir el producto a la cesta',
+    )
+    expect(getHeader().getByText('0 productos en la cesta')).toBeInTheDocument()
+    expect(getAddButton()).toBeEnabled()
   })
 })
