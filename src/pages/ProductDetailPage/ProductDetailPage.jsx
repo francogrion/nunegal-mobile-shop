@@ -1,4 +1,5 @@
 import { Link, useLocation, useParams } from 'react-router'
+import LoadingNotice from '../../components/LoadingNotice/LoadingNotice.jsx'
 import PageTitle from '../../components/PageTitle/PageTitle.jsx'
 import ProductActions from '../../components/ProductActions/ProductActions.jsx'
 import ProductImage from '../../components/ProductImage/ProductImage.jsx'
@@ -30,7 +31,7 @@ function ProductDetailPage() {
 
       {status === 'loading' && (
         <p role="status" className={styles.message}>
-          Cargando producto…
+          <LoadingNotice label="Cargando producto…" />
         </p>
       )}
 

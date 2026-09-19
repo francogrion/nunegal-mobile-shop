@@ -1,7 +1,8 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { act, screen, waitFor, within } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { API_BASE_URL } from '../../api/config.js'
+import { SLOW_LOADING_DELAY_MS } from '../../hooks/useIsSlow.js'
 import {
   mockCartEndpoint,
   mockProductDetailEndpoint,
@@ -35,6 +36,30 @@ describe('ProductDetailPage', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Cargando producto')
     await findProductHeading()
     expect(screen.queryByText(/Cargando producto/)).not.toBeInTheDocument()
+  })
+
+  it('warns that the first load may take up to a minute when the API is slow', async () => {
+    vi.useFakeTimers({
+      toFake: ['setTimeout', 'clearTimeout'],
+      shouldAdvanceTime: true,
+    })
+    const response = Promise.withResolvers()
+    server.use(
+      http.get(`${API_BASE_URL}/api/product/:id`, async () => {
+        await response.promise
+        return HttpResponse.json(rawProductDetail)
+      }),
+    )
+    renderApp({ route: PRODUCT_ROUTE })
+
+    await act(() => vi.advanceTimersByTimeAsync(SLOW_LOADING_DELAY_MS))
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'la primera carga puede tardar hasta un minuto',
+    )
+
+    response.resolve()
+    await findProductHeading()
+    expect(screen.queryByText(/puede tardar/)).not.toBeInTheDocument()
   })
 
   it('requests the product identified in the URL', async () => {

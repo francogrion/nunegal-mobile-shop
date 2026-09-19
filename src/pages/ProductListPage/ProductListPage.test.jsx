@@ -1,7 +1,8 @@
-import { screen, within } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { API_BASE_URL } from '../../api/config.js'
+import { SLOW_LOADING_DELAY_MS } from '../../hooks/useIsSlow.js'
 import { mockProductListEndpoint } from '../../test/apiMocks.js'
 import { rawProductList } from '../../test/fixtures/products.js'
 import { renderApp } from '../../test/renderApp.jsx'
@@ -25,6 +26,31 @@ describe('ProductListPage', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Cargando productos')
     await findProductList()
     expect(screen.queryByText(/Cargando productos/)).not.toBeInTheDocument()
+  })
+
+  it('warns that the first load may take up to a minute when the API is slow', async () => {
+    vi.useFakeTimers({
+      toFake: ['setTimeout', 'clearTimeout'],
+      shouldAdvanceTime: true,
+    })
+    const response = Promise.withResolvers()
+    server.use(
+      http.get(`${API_BASE_URL}/api/product`, async () => {
+        await response.promise
+        return HttpResponse.json(rawProductList)
+      }),
+    )
+    renderApp()
+
+    expect(screen.getByRole('status')).not.toHaveTextContent(/puede tardar/)
+    await act(() => vi.advanceTimersByTimeAsync(SLOW_LOADING_DELAY_MS))
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'la primera carga puede tardar hasta un minuto',
+    )
+
+    response.resolve()
+    await findProductList()
+    expect(screen.queryByText(/puede tardar/)).not.toBeInTheDocument()
   })
 
   it('shows every product returned by the API', async () => {

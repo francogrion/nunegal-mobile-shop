@@ -1,4 +1,5 @@
 import { useSearchParams } from 'react-router'
+import LoadingNotice from '../../components/LoadingNotice/LoadingNotice.jsx'
 import PageTitle from '../../components/PageTitle/PageTitle.jsx'
 import ProductCard from '../../components/ProductCard/ProductCard.jsx'
 import SearchBar from '../../components/SearchBar/SearchBar.jsx'
@@ -39,7 +40,7 @@ function ProductListPage() {
         role="status"
         className={status === 'loading' ? styles.message : styles.summary}
       >
-        {status === 'loading' && 'Cargando productos…'}
+        {status === 'loading' && <LoadingNotice label="Cargando productos…" />}
         {status === 'success' &&
           describeResults(visibleProducts.length, search)}
       </p>
