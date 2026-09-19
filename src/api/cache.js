@@ -1,3 +1,5 @@
+import { getLocalStorage } from '../utils/getLocalStorage.js'
+
 /**
  * Key-value cache persisted in Web Storage whose entries expire after `ttl`
  * milliseconds.
@@ -6,16 +8,6 @@
  * storage disabled, corrupted entries...) is treated as a cache miss instead
  * of breaking the app.
  */
-// Some browsers throw on the mere access to `localStorage` when storage is
-// blocked (e.g. Safari with cookies disabled).
-const getLocalStorage = () => {
-  try {
-    return globalThis.localStorage
-  } catch {
-    return undefined
-  }
-}
-
 export function createCache({ namespace, ttl, storage = getLocalStorage() }) {
   const storageKey = (key) => `${namespace}:${key}`
 
