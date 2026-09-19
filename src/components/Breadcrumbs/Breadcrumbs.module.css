@@ -1,12 +1,13 @@
 .breadcrumbs {
-  font-size: 0.875rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   color: var(--color-text-muted);
 }
 
 .list {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1);
+  gap: var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -14,12 +15,17 @@
 
 /* Decorative separator, hidden from screen readers via the alt text syntax */
 .item + .item::before {
-  content: '›' / '';
-  margin-right: var(--space-1);
+  content: '/' / '';
+  margin-right: var(--space-2);
+  opacity: 0.5;
 }
 
 .item a {
   color: inherit;
+}
+
+.item a:hover {
+  color: var(--color-accent);
 }
 
 .item [aria-current='page'] {

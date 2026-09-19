@@ -1,0 +1,49 @@
+/* Covers the top of the page and fades out before the content below */
+.background {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 35rem;
+  overflow: hidden;
+  pointer-events: none;
+  mask-image: linear-gradient(#000 55%, transparent);
+}
+
+.circuit {
+  width: 100%;
+  height: 100%;
+}
+
+.trace {
+  fill: none;
+  stroke: rgb(47 84 235 / 0.16);
+  stroke-width: 1.2;
+}
+
+.pad {
+  fill: var(--color-bg);
+  stroke: rgb(47 84 235 / 0.28);
+  stroke-width: 1.2;
+}
+
+/* A short dash (7% of each trace) travels from start to end */
+.pulse {
+  fill: none;
+  stroke: url(#circuit-pulse);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-dasharray: 7 93;
+  stroke-dashoffset: 100;
+  animation: travel 7s linear infinite;
+}
+
+@keyframes travel {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse {
+    display: none;
+  }
+}
