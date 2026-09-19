@@ -100,6 +100,25 @@ test.describe('Detalle de producto', () => {
     await expect(cartSummary(page, '1 producto en la cesta')).toBeAttached()
   })
 
+  test('goes back to the list where the user left it', async ({ page }) => {
+    await page.goto('/')
+    const product = page
+      .getByRole('list', { name: 'Productos' })
+      .getByRole('listitem')
+      .nth(11)
+    await product.scrollIntoViewIfNeeded()
+    const listScroll = await page.evaluate(() => window.scrollY)
+    await product.getByRole('link').click()
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+
+    await page.getByRole('link', { name: 'Volver al listado' }).click()
+
+    await expect(page.getByRole('list', { name: 'Productos' })).toBeVisible()
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeCloseTo(listScroll, -1)
+  })
+
   test('goes back to the list keeping the previous search', async ({
     page,
   }) => {

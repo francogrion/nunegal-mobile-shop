@@ -1,5 +1,5 @@
 import { IconArrowLeft, IconRefresh } from '@tabler/icons-react'
-import { Link, useLocation, useParams } from 'react-router'
+import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import LoadingNotice from '../../components/LoadingNotice/LoadingNotice.jsx'
 import PageTitle from '../../components/PageTitle/PageTitle.jsx'
 import ProductActions from '../../components/ProductActions/ProductActions.jsx'
@@ -16,7 +16,24 @@ function ProductDetailPage() {
   // Back to the list the user came from, or to the full list when the page
   // was opened directly (e.g. from a shared link).
   const { state } = useLocation()
+  const navigate = useNavigate()
   const backTo = state?.from ?? '/'
+
+  // Coming from the list, going back in history returns to the same entry,
+  // so the browser restores where the user left it (and the history does not
+  // pile up duplicates). Modified clicks keep the default link behaviour,
+  // e.g. opening the list in a new tab.
+  const handleBack = (event) => {
+    const isPlainClick =
+      event.button === 0 &&
+      !event.metaKey &&
+      !event.ctrlKey &&
+      !event.shiftKey &&
+      !event.altKey
+    if (!state?.from || !isPlainClick) return
+    event.preventDefault()
+    navigate(-1)
+  }
 
   const title = {
     loading: 'Cargando producto',
@@ -27,7 +44,7 @@ function ProductDetailPage() {
   return (
     <article>
       <PageTitle title={title} />
-      <Link className={styles.back} to={backTo}>
+      <Link className={styles.back} to={backTo} onClick={handleBack}>
         <IconArrowLeft size={16} stroke={2} aria-hidden="true" />
         Volver al listado
       </Link>

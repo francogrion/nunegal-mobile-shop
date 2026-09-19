@@ -114,6 +114,23 @@ describe('ProductDetailPage', () => {
     ).toHaveValue('iconia')
   })
 
+  it('goes back in history when the user came from the list, instead of opening it again', async () => {
+    mockProductListEndpoint()
+    mockProductDetailEndpoint()
+    const { user, getLocation } = renderApp({ route: '/?search=iconia' })
+    await screen.findByRole('list', { name: 'Productos' })
+    const listEntry = getLocation().key
+
+    await user.click(screen.getByRole('link', { name: /Iconia Talk S/ }))
+    await findProductHeading()
+    const backLink = screen.getByRole('link', { name: 'Volver al listado' })
+    // Still a real link to the list, e.g. to open it in a new tab
+    expect(backLink).toHaveAttribute('href', '/?search=iconia')
+    await user.click(backLink)
+
+    expect(getLocation().key).toBe(listEntry)
+  })
+
   it('shows an error that can be retried when the product cannot be loaded', async () => {
     mockProductDetailEndpoint()
     // The API answers unknown ids and server failures alike, with a 500.
