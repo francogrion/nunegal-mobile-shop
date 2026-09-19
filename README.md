@@ -149,7 +149,7 @@ Los precios se muestran en euros con formato español (`170 €`); la API no ind
 - **Especificaciones destacadas** (pantalla, batería, cámara y RAM) extraídas del texto libre de la API. Si un dato no se puede leer con fiabilidad, no se muestra; la tabla completa siempre conserva el texto original.
 - Tabla de **especificaciones** con marca, modelo, precio, CPU, RAM, sistema operativo, resolución y tamaño de pantalla, batería, cámaras principal y frontal, dimensiones y peso. Los datos que la API no proporciona se muestran como _No disponible_.
 - **Selectores de almacenamiento y color** como grupos de botones de opción accesibles. Si solo hay una opción, se muestra igualmente y viene seleccionada; si hay varias, ninguna se preselecciona para que el usuario elija de forma explícita. Los colores muestran una muestra cuando el nombre corresponde a un color CSS válido (lo valida el propio navegador).
-- El enlace **Volver al listado** regresa al listado del que venía el usuario, conservando su búsqueda; si se abrió el detalle directamente, lleva al listado completo.
+- El enlace **Volver al listado** regresa al listado del que venía el usuario, conservando su búsqueda y el punto de la lista donde estaba (vuelve atrás en el historial, así que el navegador restaura el scroll); si se abrió el detalle directamente, lleva al listado completo.
 - Botón **Añadir a la cesta**, activo cuando hay almacenamiento y color seleccionados. Envía a la API el identificador del producto y los códigos de color y almacenamiento, se desactiva mientras la petición está en curso (evitando envíos dobles) y confirma el resultado o muestra un error.
 - Estados de carga y de error con opción de reintento.
 
@@ -162,6 +162,7 @@ Los precios se muestran en euros con formato español (`170 €`); la API no ind
 ### Detalles transversales
 
 - Cada página tiene su propio **título de documento** (`Acer Iconia Talk S · Mobile Shop`).
+- Cada página nueva se abre **desde arriba**, aunque se llegue desde el final del listado; al volver atrás, el navegador restaura la posición anterior.
 - Si una carga tarda más de 3 segundos, se avisa de que el servidor se está activando y **la primera carga puede tardar hasta un minuto** (arranque en frío de la API).
 - Si la imagen de un producto no carga, se muestra un **marcador de posición** en su lugar.
 - Las rutas desconocidas muestran una página 404 con un enlace de vuelta al catálogo.
